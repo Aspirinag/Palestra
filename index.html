@@ -360,7 +360,18 @@
       <div class="row">
         <input id="newEx" class="grow" placeholder="Nuovo esercizio">
         <button class="small" data-add="1">Aggiungi</button>
-      </div>`;
+      </div>
+      <h2>Storico serie</h2>
+      ${data.sets.length ? [...data.sets].map((s, idx) => ({ ...s, idx })).reverse().slice(0, 50).map((s) => `
+        <div class="card">
+          <div class="between">
+            <div><strong>${esc(s.exercise)}</strong><p class="muted">${s.kg} kg × ${s.reps} rip. · ${fmtDate(s.date)}</p></div>
+            <div class="row">
+              <button class="small" data-editset="${s.idx}">Modifica</button>
+              <button class="link" data-delset="${s.idx}">Elimina</button>
+            </div>
+          </div>
+        </div>`).join('') : '<p class="muted">Nessuna serie registrata.</p>'}`;
   }
 
   // ---------- CARDIO ----------
@@ -369,10 +380,18 @@
     const chips = CARDIO_TYPES.map((t) =>
       `<button class="chip ${t === cardioType ? 'on' : ''}" data-ctype="${t}">${t}</button>`).join('');
     const hist = data.cardio.length
-      ? data.cardio.map((c) => `
+      ? data.cardio.map((c, idx) => `
           <div class="card">
-            <strong>${esc(c.type)} · ${c.minutes} min${c.km > 0 ? ` · ${c.km} km` : ''}</strong>
-            <p class="muted">${c.date}</p>
+            <div class="between">
+              <div>
+                <strong>${esc(c.type)} · ${c.minutes} min${c.km > 0 ? ` · ${c.km} km` : ''}</strong>
+                <p class="muted">${fmtDate(c.date)}</p>
+              </div>
+              <div class="row">
+                <button class="small" data-editcardio="${idx}">Modifica</button>
+                <button class="link" data-delcardio="${idx}">Elimina</button>
+              </div>
+            </div>
           </div>`).join('')
       : '<p class="muted">Nessuna sessione registrata.</p>';
     return `
@@ -405,7 +424,16 @@
       <p class="muted">Tocca un giorno per cambiarne il tipo.</p>
       ${pianoSettimana('A')}
       ${pianoSettimana('B')}
-      <p class="muted">Settimana A: 2 giorni di cardio e 1 di pesi. Settimana B: 2 giorni di pesi e 1 di cardio.</p>`;
+      <p class="muted">Settimana A: 2 giorni di cardio e 1 di pesi. Settimana B: 2 giorni di pesi e 1 di cardio.</p>
+      <h2>Backup</h2>
+      <div class="card">
+        <p class="muted">I dati restano nel browser di questo dispositivo. Esporta ogni tanto un file di backup, e importalo se cambi telefono o browser.</p>
+        <div class="row">
+          <button class="small" data-export="1">Esporta backup</button>
+          <button class="small" data-import="1">Importa backup</button>
+        </div>
+        <input type="file" id="importFile" accept="application/json,.json" style="display: none">
+      </div>`;
   }
 
   // ---------- CALENDARIO E PAGAMENTI ----------
@@ -580,6 +608,59 @@
     }
     if (d.swap) { data.swap = !data.swap; save(); return render(); }
 
+    if (d.editset !== undefined) {
+      const s = data.sets[Number(d.editset)];
+      const kg = prompt('Carico (kg)', s.kg);
+      if (kg === null) return;
+      const reps = prompt('Ripetizioni', s.reps);
+      if (reps === null) return;
+      const k = parseFloat(String(kg).replace(',', '.'));
+      const r = parseInt(reps, 10);
+      if (isNaN(k) || isNaN(r)) return alert('Valori non validi');
+      s.kg = k;
+      s.reps = r;
+      save();
+      return render();
+    }
+    if (d.delset !== undefined) {
+      if (!confirm('Eliminare questa serie?')) return;
+      data.sets.splice(Number(d.delset), 1);
+      save();
+      return render();
+    }
+    if (d.editcardio !== undefined) {
+      const c = data.cardio[Number(d.editcardio)];
+      const min = prompt('Minuti', c.minutes);
+      if (min === null) return;
+      const km = prompt('Km (0 se non li hai)', c.km);
+      if (km === null) return;
+      const m = parseInt(min, 10);
+      if (isNaN(m) || m <= 0) return alert('Minuti non validi');
+      c.minutes = m;
+      c.km = parseFloat(String(km).replace(',', '.')) || 0;
+      save();
+      return render();
+    }
+    if (d.delcardio !== undefined) {
+      if (!confirm('Eliminare questa sessione?')) return;
+      data.cardio.splice(Number(d.delcardio), 1);
+      save();
+      return render();
+    }
+
+    if (d.export !== undefined) {
+      const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `palestra-backup-${todayISO()}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      return;
+    }
+    if (d.import !== undefined) { document.getElementById('importFile').click(); return; }
+
     if (d.calprev !== undefined) { calMonth = new Date(calMonth.getFullYear(), calMonth.getMonth() - 1, 1); return render(); }
     if (d.calnext !== undefined) { calMonth = new Date(calMonth.getFullYear(), calMonth.getMonth() + 1, 1); return render(); }
     if (d.calday) { calSelected = d.calday; return render(); }
@@ -595,6 +676,28 @@
       return render();
     }
     if (d.unpaid) { delete data.payments[d.unpaid]; save(); return render(); }
+  });
+
+  // Importa un backup: sostituisce i dati attuali con quelli del file
+  document.addEventListener('change', (e) => {
+    if (e.target.id !== 'importFile') return;
+    const file = e.target.files[0];
+    e.target.value = '';
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const parsed = JSON.parse(reader.result);
+        if (!parsed || !Array.isArray(parsed.exercises) || !parsed.plans) throw new Error('formato');
+        data = { ...structuredClone(DEFAULT), ...parsed };
+        save();
+        render();
+        alert('Backup importato.');
+      } catch (err) {
+        alert('File non valido: scegli un backup esportato da questa app.');
+      }
+    };
+    reader.readAsText(file);
   });
 
   // Salva le bozze mentre si scrive, senza ridisegnare la pagina
