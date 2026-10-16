@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Dieta">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#2c2c36">
+<title>Dieta</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; color: #fff; font-family: -apple-system, system-ui, sans-serif; }
+  html { background: #2c2c36; }
+  body {
+    min-height: 100vh;
+    background: radial-gradient(circle at 85% 0%, rgba(212, 255, 63, 0.18), transparent 42%), linear-gradient(180deg, #3d3d4a 0%, #2a2a34 100%);
+    background-attachment: fixed;
+    padding-bottom: calc(110px + env(safe-area-inset-bottom));
+    padding-top: env(safe-area-inset-top);
+  }
+  main { padding: 20px; }
+  h1 { font-size: 28px; margin: 8px 0 12px; }
+  h2 { font-size: 20px; margin: 24px 0 8px; }
+  .muted { color: #d4d4dc; font-size: 14px; margin: 4px 0; }
+  .card { background: rgba(255, 255, 255, 0.14); -webkit-backdrop-filter: blur(24px) saturate(160%); backdrop-filter: blur(24px) saturate(160%); border: 1px solid rgba(255, 255, 255, 0.22); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15), 0 8px 32px rgba(0, 0, 0, 0.3); border-radius: 20px; padding: 16px; margin-bottom: 12px; }
+  .between { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 8px 0; }
+  input { background: rgba(255, 255, 255, 0.18); color: #fff; border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 12px; padding: 10px 12px; font-size: 16px; min-width: 0; width: 100%; }
+  input::placeholder { color: #b0b0bb; }
+  button { font: inherit; border: none; cursor: pointer; }
+  .primary { display: block; width: 100%; background: linear-gradient(rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0) 55%), #d4ff3f; color: #0a0a0a; font-weight: 700; font-size: 16px; border-radius: 16px; padding: 14px; margin: 12px 0; }
+  .small { background: rgba(255, 255, 255, 0.18); border: 1px solid rgba(255, 255, 255, 0.25); color: #fff; font-weight: 600; border-radius: 12px; padding: 10px 14px; }
+  .chip { background: rgba(255, 255, 255, 0.18); border: 1px solid rgba(255, 255, 255, 0.25); color: #fff; font-weight: 600; border-radius: 999px; padding: 8px 14px; }
+  .chip.on { background: #d4ff3f; color: #0a0a0a; border-color: #d4ff3f; }
+  .link { background: none; color: #f87171; font-size: 14px; padding: 0; }
+  .badge { display: inline-block; background: #d4ff3f; color: #0a0a0a; font-weight: 700; border-radius: 999px; padding: 6px 14px; margin-bottom: 12px; font-size: 13px; }
+  .alimenti { margin: 8px 0 0; padding-left: 20px; line-height: 1.6; }
+  .check { display: flex; align-items: center; gap: 12px; width: 100%; background: none; color: #fff; text-align: left; font-size: 16px; padding: 8px 0; }
+  .box { width: 24px; height: 24px; flex: none; border-radius: 7px; border: 2px solid rgba(255, 255, 255, 0.5); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; }
+  .check.on .box { background: #d4ff3f; border-color: #d4ff3f; color: #0a0a0a; }
+  .stepper { display: flex; align-items: center; gap: 12px; }
+  .stepper .val { font-size: 22px; font-weight: 700; min-width: 80px; text-align: center; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 6px 4px; border-bottom: 1px solid rgba(255, 255, 255, 0.15); }
+  th { color: #d4d4dc; font-weight: 600; }
+  .delta-up { color: #f87171; font-weight: 700; }
+  .delta-down { color: #d4ff3f; font-weight: 700; }
+  svg.chart { width: 100%; height: auto; display: block; }
+  nav { position: fixed; left: 12px; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom)); display: flex; background: rgba(255, 255, 255, 0.18); -webkit-backdrop-filter: blur(30px) saturate(180%); backdrop-filter: blur(30px) saturate(180%); border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 26px; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 10px 30px rgba(0, 0, 0, 0.4); overflow: hidden; }
+  nav button { flex: 1; background: none; color: rgba(255, 255, 255, 0.75); font-weight: 700; font-size: 12px; padding: 16px 0; }
+  nav button.active { color: #d4ff3f; }
+  .profili { display: flex; gap: 8px; margin-bottom: 4px; }
+  .profili button.on { background: #d4ff3f; color: #0a0a0a; }
+  #impFile { display: none; }
+</style>
+</head>
+<body>
+<main id="app"></main>
+<nav>
+  <button data-tab="oggi">OGGI</button>
+  <button data-tab="andamento">ANDAMENTO</button>
+  <button data-tab="dati">DATI</button>
+</nav>
+<input type="file" id="impFile" accept="application/json,.json">
+<script>
+  const DAYS = ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato', 'Domenica'];
+  const OLIO_TOT = 6;   // cucchiaini al giorno
+  const ACQUA_TOT = 2;  // litri al giorno
+  const KEY = 'dieta:v1';
+
+  const DEFAULT = {
+    profili: {
+      raffaele: { nome: 'Raffaele', piani: [], bia: [], dieta: {} },
+      alessandra: { nome: 'Alessandra', piani: [], bia: [], dieta: {} },
+    },
+    attivo: 'raffaele',
+  };
+
+  let state = load();
+  let tab = 'oggi';
+
+  function load() {
+    try {
+      const s = { ...structuredClone(DEFAULT), ...JSON.parse(localStorage.getItem(KEY) || '{}') };
+      return s;
+    } catch (e) {
+      return structuredClone(DEFAULT);
+    }
+  }
+  function save() { localStorage.setItem(KEY, JSON.stringify(state)); }
+
+  const prof = () => state.profili[state.attivo];
+  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const pad = (n) => String(n).padStart(2, '0');
+  const isoOf = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const todayISO = () => isoOf(new Date());
+  const parseISO = (iso) => { const [y, m, d] = iso.split('-').map(Number); return new Date(y, m - 1, d); };
+  const dayIdx = (iso) => (parseISO(iso).getDay() + 6) % 7; // Lunedì = 0
+  const fmtDate = (iso) => `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}`;
+  const addDays = (iso, n) => { const d = parseISO(iso); d.setDate(d.getDate() + n); return isoOf(d); };
+  const num = (v) => (v === '' || v == null || isNaN(Number(v)) ? null : Number(v));
+
+  // Piano attivo per una data: dal <= data <= al (al vuoto = aperto)
+  function planFor(iso) {
+    return prof().piani.find((p) => p.dal <= iso && (!p.al || iso <= p.al)) || null;
+  }
+  function recFor(iso) {
+    const r = prof().dieta[iso] || { slot: {}, olio: 0, acqua: 0 };
+    prof().dieta[iso] = r;
+    return r;
+  }
+  function slotState(iso, i) {
+    const r = recFor(iso);
+    return r.slot[i] || { opt: 0, fatto: false };
+  }
+
+  // ---------- OGGI ----------
+  function oggi() {
+    const iso = todayISO();
+    const piano = planFor(iso);
+    if (!piano) {
+      return `
+        <h1>Oggi</h1>
+        <p class="muted">${DAYS[dayIdx(iso)]} ${fmtDate(iso)}</p>
+        <div class="card">
+          <strong>Nessun piano attivo per oggi.</strong>
+          <p class="muted">Importa il piano della stagione dalla scheda Dati.</p>
+          <button class="small" data-tab="dati">Vai a Dati</button>
+        </div>`;
+    }
+    const giorno = piano.giorni[dayIdx(iso)];
+    const r = recFor(iso);
+    const pasti = giorno.pasti.map((pasto, i) => {
+      const st = slotState(iso, i);
+      const opt = pasto.opzioni[st.opt] || pasto.opzioni[0];
+      const alternative = pasto.opzioni.length > 1
+        ? `<div class="row">${pasto.opzioni.map((o, j) => `
+            <button class="chip ${j === st.opt ? 'on' : ''}" data-opt="${i}:${j}">${esc(o.titolo || 'Opzione ' + (j + 1))}</button>`).join('')}</div>`
+        : '';
+      return `
+        <div class="card">
+          <div class="between">
+            <strong>${esc(pasto.nome)}</strong>
+            <button class="chip ${st.fatto ? 'on' : ''}" data-fatto="${i}">${st.fatto ? '✓ Fatto' : 'Segna'}</button>
+          </div>
+          ${alternative}
+          <ul class="alimenti">${opt.alimenti.map((a) => `<li>${esc(a.nome)} <span class="muted">${esc(a.quantita)}</span></li>`).join('')}</ul>
+        </div>`;
+    }).join('');
+    return `
+      <h1>Oggi, ${DAYS[dayIdx(iso)]}</h1>
+      <p class="muted">${fmtDate(iso)} · ${esc(piano.nome)}</p>
+      ${giorno.palestra ? '<span class="badge">Giorno di palestra</span>' : ''}
+      ${pasti}
+      <h2>Olio e acqua</h2>
+      <div class="card">
+        <div class="between">
+          <strong>Olio extra vergine</strong>
+          <div class="stepper">
+            <button class="small" data-olio="-1">−</button>
+            <span class="val">${r.olio} / ${OLIO_TOT}</span>
+            <button class="small" data-olio="1">+</button>
+          </div>
+        </div>
+        <p class="muted">cucchiaini, da distribuire nella giornata</p>
+      </div>
+      <div class="card">
+        <div class="between">
+          <strong>Acqua</strong>
+          <div class="stepper">
+            <button class="small" data-acqua="-0.25">−</button>
+            <span class="val">${r.acqua.toFixed(2)} / ${ACQUA_TOT} L</span>
+            <button class="small" data-acqua="0.25">+</button>
+          </div>
+        </div>
+        <p class="muted">Un bicchiere è circa 0,25 L</p>
+      </div>
+      <p class="muted">Pane e olio puoi distribuirli come preferisci nella giornata. Puoi sostituire la frutta mantenendo la stessa porzione, ma non con la banana. Puoi invertire giornate intere, non singoli pasti.</p>`;
+  }
+
+  // ---------- ANDAMENTO ----------
+  function sparkline(values, color, h = 120) {
+    if (values.length < 2) return '';
+    const w = 320, pad2 = 16;
+    const min = Math.min(...values), max = Math.max(...values);
+    const range = max - min || 1;
+    const pts = values.map((v, i) => {
+      const x = pad2 + (i * (w - 2 * pad2)) / (values.length - 1);
+      const y = h - pad2 - ((v - min) / range) * (h - 2 * pad2);
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    }).join(' ');
+    return `<polyline points="${pts}" fill="none" stroke="${color}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`;
+  }
+
+  function aderenza() {
+    let tot = 0, fatti = 0;
+    const oggiIso = todayISO();
+    for (let k = 6; k >= 0; k--) {
+      const iso = addDays(oggiIso, -k);
+      const piano = planFor(iso);
+      if (!piano) continue;
+      const giorno = piano.giorni[dayIdx(iso)];
+      giorno.pasti.forEach((_, i) => {
+        tot++;
+        if (slotState(iso, i).fatto) fatti++;
+      });
+    }
+    return tot ? Math.round((fatti / tot) * 100) : null;
+  }
+
+  function andamento() {
+    const bia = [...prof().bia].sort((a, b) => a.data.localeCompare(b.data));
+    const ad = aderenza();
+    const adHtml = ad == null
+      ? '<p class="muted">Nessun piano attivo negli ultimi 7 giorni.</p>'
+      : `<p><strong>${ad}%</strong> dei pasti segnati negli ultimi 7 giorni.</p>`;
+    if (!bia.length) {
+      return `
+        <h1>Andamento</h1>
+        <div class="card">${adHtml}</div>
+        <div class="card"><strong>Nessuna misurazione.</strong><p class="muted">Aggiungi le misure della BIA dalla scheda Dati.</p></div>`;
+    }
+    const primo = bia[0], ultimo = bia[bia.length - 1];
+    const delta = (k) => (primo[k] != null && ultimo[k] != null ? ultimo[k] - primo[k] : null);
+    const cella = (v, unit = '') => (v == null ? '–' : `${v}${unit}`);
+    const deltaCella = (d, unit) => {
+      if (d == null) return '–';
+      const cls = d > 0 ? 'delta-up' : 'delta-down';
+      return `<span class="${cls}">${d > 0 ? '+' : ''}${d.toFixed(1)}${unit}</span>`;
+    };
+    const peso = bia.map((m) => m.peso).filter((v) => v != null);
+    const grasso = bia.map((m) => m.grasso_kg).filter((v) => v != null);
+    const righe = [...bia].reverse().map((m) => `
+      <tr>
+        <td>${fmtDate(m.data)}</td>
+        <td>${cella(m.peso)}</td>
+        <td>${cella(m.grasso_kg)}</td>
+        <td>${cella(m.magra_kg)}</td>
+        <td>${cella(m.vita_cm)}</td>
+      </tr>`).join('');
+    const obiettivi = ultimo.obiettivo_peso != null || ultimo.obiettivo_grasso_pct != null
+      ? `<p class="muted">Obiettivi: peso ${cella(ultimo.obiettivo_peso, ' kg')}, massa grassa ${cella(ultimo.obiettivo_grasso_pct, '%')}</p>`
+      : '';
+    return `
+      <h1>Andamento</h1>
+      <div class="card">${adHtml}</div>
+      <h2>Dal primo all'ultimo controllo</h2>
+      <div class="card">
+        <table>
+          <tr><th>Peso</th><td>${cella(primo.peso)} → ${cella(ultimo.peso)}</td><td>${deltaCella(delta('peso'), ' kg')}</td></tr>
+          <tr><th>Massa grassa</th><td>${cella(primo.grasso_kg)} → ${cella(ultimo.grasso_kg)} kg</td><td>${deltaCella(delta('grasso_kg'), ' kg')}</td></tr>
+          <tr><th>Massa magra</th><td>${cella(primo.magra_kg)} → ${cella(ultimo.magra_kg)} kg</td><td>${deltaCella(delta('magra_kg'), ' kg')}</td></tr>
+          <tr><th>Vita</th><td>${cella(primo.vita_cm)} → ${cella(ultimo.vita_cm)} cm</td><td>${deltaCella(delta('vita_cm'), ' cm')}</td></tr>
+        </table>
+        ${obiettivi}
+      </div>
+      <h2>Grafici</h2>
+      <div class="card">
+        <strong>Peso (bianco) e massa grassa (lime), kg</strong>
+        <svg class="chart" viewBox="0 0 320 120">
+          ${sparkline(peso, '#ffffff')}
+          ${sparkline(grasso, '#d4ff3f')}
+        </svg>
+        <p class="muted">Dal ${fmtDate(primo.data)} al ${fmtDate(ultimo.data)}, ${bia.length} ${bia.length === 1 ? 'misurazione' : 'misurazioni'}.</p>
+      </div>
+      <h2>Storico misurazioni</h2>
+      <div class="card">
+        <table>
+          <tr><th>Data</th><th>Peso</th><th>Grasso</th><th>Magra</th><th>Vita</th></tr>
+          ${righe}
+        </table>
+      </div>`;
+  }
+
+  // ---------- DATI ----------
+  function dati() {
+    const piani = prof().piani.length
+      ? [...prof().piani].sort((a, b) => a.dal.localeCompare(b.dal)).map((p, i) => `
+          <div class="card">
+            <div class="between">
+              <div><strong>${esc(p.nome)}</strong><p class="muted">${fmtDate(p.dal)} → ${p.al ? fmtDate(p.al) : 'aperto'}</p></div>
+              <button class="link" data-delpiano="${i}">Elimina</button>
+            </div>
+          </div>`).join('')
+      : '<p class="muted">Nessun piano importato.</p>';
+    const oggiIso = todayISO();
+    return `
+      <h1>Dati</h1>
+      <h2>Piani alimentari</h2>
+      ${piani}
+      <h2>Importa</h2>
+      <div class="card">
+        <p class="muted">Scegli un file .json con il piano o con le misure BIA. Viene aggiunto al profilo ${esc(prof().nome)}.</p>
+        <button class="primary" data-import="1">Scegli file</button>
+      </div>
+      <h2>Aggiungi misurazione BIA</h2>
+      <div class="card">
+        <div class="grid2">
+          <input type="date" id="b_data" value="${oggiIso}">
+          <input inputmode="decimal" id="b_peso" placeholder="Peso (kg)">
+          <input inputmode="decimal" id="b_grasso" placeholder="Massa grassa (kg)">
+          <input inputmode="decimal" id="b_magra" placeholder="Massa magra (kg)">
+          <input inputmode="decimal" id="b_acqua" placeholder="Acqua (l)">
+          <input inputmode="numeric" id="b_bmr" placeholder="Metabolismo (kcal)">
+          <input inputmode="numeric" id="b_vat" placeholder="Grasso viscerale (cm²)">
+          <input inputmode="decimal" id="b_vita" placeholder="Vita (cm)">
+        </div>
+        <button class="primary" data-savebia="1">Salva misurazione</button>
+      </div>
+      <h2>Backup</h2>
+      <div class="card">
+        <p class="muted">I dati restano nel browser del telefono. Esporta ogni tanto un backup.</p>
+        <div class="row">
+          <button class="small" data-export="1">Esporta backup</button>
+        </div>
+      </div>`;
+  }
+
+  // ---------- RENDER ----------
+  function render() {
+    const profili = Object.entries(state.profili).map(([id, p]) =>
+      `<button class="chip ${id === state.attivo ? 'on' : ''}" data-profilo="${id}">${esc(p.nome)}</button>`).join('');
+    const corpo = tab === 'oggi' ? oggi() : tab === 'andamento' ? andamento() : dati();
+    document.getElementById('app').innerHTML = `<div class="profili">${profili}</div>${corpo}`;
+    document.querySelectorAll('nav button').forEach((b) => b.classList.toggle('active', b.dataset.tab === tab));
+    window.scrollTo(0, 0);
+  }
+
+  // Modifica un piano o una misura, poi salva e ridisegna
+  function setSlot(iso, i, patch) {
+    const r = recFor(iso);
+    r.slot[i] = { ...slotState(iso, i), ...patch };
+    save();
+    render();
+  }
+
+  document.addEventListener('click', (e) => {
+    const b = e.target.closest('button');
+    if (!b) return;
+    const d = b.dataset;
+
+    if (d.tab) { tab = d.tab; return render(); }
+    if (d.profilo) { state.attivo = d.profilo; save(); return render(); }
+
+    const iso = todayISO();
+    if (d.fatto !== undefined) { const i = Number(d.fatto); return setSlot(iso, i, { fatto: !slotState(iso, i).fatto }); }
+    if (d.opt !== undefined) { const [i, j] = d.opt.split(':').map(Number); return setSlot(iso, i, { opt: j }); }
+    if (d.olio !== undefined) {
+      const r = recFor(iso);
+      r.olio = Math.min(OLIO_TOT, Math.max(0, r.olio + Number(d.olio)));
+      save(); return render();
+    }
+    if (d.acqua !== undefined) {
+      const r = recFor(iso);
+      r.acqua = Math.min(ACQUA_TOT, Math.max(0, Math.round((r.acqua + Number(d.acqua)) * 100) / 100));
+      save(); return render();
+    }
+
+    if (d.import !== undefined) { document.getElementById('impFile').click(); return; }
+    if (d.delpiano !== undefined) {
+      const ordinati = [...prof().piani].sort((a, b2) => a.dal.localeCompare(b2.dal));
+      const p = ordinati[Number(d.delpiano)];
+      if (!confirm(`Eliminare il piano "${p.nome}"?`)) return;
+      prof().piani = prof().piani.filter((x) => x !== p);
+      save(); return render();
+    }
+    if (d.savebia !== undefined) {
+      const data = document.getElementById('b_data').value;
+      if (!data) return alert('Inserisci la data');
+      const m = {
+        data,
+        peso: num(document.getElementById('b_peso').value),
+        grasso_kg: num(document.getElementById('b_grasso').value),
+        magra_kg: num(document.getElementById('b_magra').value),
+        acqua_l: num(document.getElementById('b_acqua').value),
+        bmr: num(document.getElementById('b_bmr').value),
+        vat_cm2: num(document.getElementById('b_vat').value),
+        vita_cm: num(document.getElementById('b_vita').value),
+      };
+      if (m.peso == null) return alert('Inserisci almeno il peso');
+      mergeBia([m]);
+      save(); alert('Misurazione salvata.'); return render();
+    }
+    if (d.export !== undefined) {
+      const url = URL.createObjectURL(new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' }));
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `dieta-backup-${todayISO()}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      return;
+    }
+  });
+
+  // Aggiunge o aggiorna misure BIA, senza duplicati per data
+  function mergeBia(misure) {
+    misure.forEach((m) => {
+      prof().bia = prof().bia.filter((x) => x.data !== m.data);
+      prof().bia.push(m);
+    });
+  }
+
+  // Importa un file: piano alimentare oppure misure BIA
+  document.addEventListener('change', (e) => {
+    if (e.target.id !== 'impFile') return;
+    const file = e.target.files[0];
+    e.target.value = '';
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const json = JSON.parse(reader.result);
+        let esito = [];
+        if (Array.isArray(json.piani)) {
+          json.piani.forEach((p) => {
+            if (!p.dal || !Array.isArray(p.giorni) || p.giorni.length !== 7) throw new Error('piano');
+            prof().piani = prof().piani.filter((x) => !(x.nome === p.nome && x.dal === p.dal));
+            prof().piani.push(p);
+          });
+          esito.push(`${json.piani.length} piano/i`);
+        }
+        if (Array.isArray(json.misurazioni)) {
+          mergeBia(json.misurazioni);
+          esito.push(`${json.misurazioni.length} misurazione/i BIA`);
+        }
+        if (!esito.length) throw new Error('formato');
+        save();
+        render();
+        alert(`Importato: ${esito.join(' e ')} per ${prof().nome}.`);
+      } catch (err) {
+        alert('File non riconosciuto. Serve un file piano o misure BIA generato per questa app.');
+      }
+    };
+    reader.readAsText(file);
+  });
+
+  render();
+</script>
+</body>
+</html>
