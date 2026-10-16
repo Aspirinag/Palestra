@@ -110,7 +110,7 @@
 
   // Riscaldamento e defaticamento: checklist per ogni sessione
   const WARM = {
-    pesi: ['Cardio leggero 8 min', 'Mobilità di spalle e anche (2 min)'],
+    pesi: ['Cardio leggero (5 min)', 'Mobilità dinamica (3–5 min): spalle, anche, schiena'],
     cardio: ['Cardio leggero 8 min', 'Allunghi dinamici (2 min)'],
   };
   const COOL = { pesi: '5–7 min di stretching leggero', cardio: '5–7 min a ritmo lento' };
@@ -223,15 +223,36 @@
       <button class="primary" data-go="cardio">Registra sessione cardio</button>`;
   }
 
+  // Carico di lavoro più recente per esercizio, dalle serie registrate
+  const lastWork = (name) => {
+    const s = [...data.sets].reverse().find((x) => x.exercise === name);
+    return s ? s.kg : null;
+  };
+  const roundKg = (kg) => Math.round(kg / 2.5) * 2.5; // i dischi arrivano a 2,5 kg
+  // Carico di avvicinamento: percentuale del carico di lavoro, oppure la percentuale se manca lo storico
+  function approachLoad(name, p) {
+    const kg = lastWork(name);
+    return kg == null
+      ? `${Math.round(p * 100)}% del carico di lavoro`
+      : `${roundKg(kg * p)} kg`;
+  }
+
   function pesiView(done) {
+    const first = data.exercises[0];
+    const ramp = [[0.5, '8–10'], [0.7, '4–6'], [0.85, '2–3']];
     return `
-      ${section('Riscaldamento', [
-        ...WARM.pesi.map((x, i) => checkRow(`pesi-w${i}`, x, done)),
-        checkRow('pesi-w-serie', `1 serie leggera per esercizio, circa metà carico`, done),
-      ].join(''))}
+      ${section('Riscaldamento', `
+        ${WARM.pesi.map((x, i) => checkRow(`pesi-w${i}`, x, done)).join('')}
+        ${first ? `<p class="muted">${esc(first)}, serie di avvicinamento con peso crescente:</p>` : ''}
+        ${first ? ramp.map(([p, reps], i) => checkRow(`pesi-r${i}`, `${approachLoad(first, p)} × ${reps} rip.`, done)).join('') : ''}
+        <p class="muted">Riposa 30–60 secondi tra una serie e l'altra.</p>`)}
       <h2>Esercizi</h2>
       ${data.exercises.map((name) => `
-        <div class="card ex">${picFor(name)}<div><strong>${esc(name)}</strong><p class="muted">${targetOf(name)}</p></div></div>`).join('')}
+        <div class="card ex">${picFor(name)}<div>
+          <strong>${esc(name)}</strong>
+          <p class="muted">Obiettivo: ${targetOf(name)}</p>
+          ${name !== first ? `<p class="muted">Avvicinamento: ${approachLoad(name, 0.5)} × 8–10 rip.</p>` : ''}
+        </div></div>`).join('')}
       ${section('Defaticamento', checkRow('pesi-d0', COOL.pesi, done))}
       <button class="primary" data-go="pesi">Apri scheda pesi</button>`;
   }
