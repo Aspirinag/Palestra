@@ -61,6 +61,18 @@
   }
   nav button { flex: 1; background: none; color: rgba(255, 255, 255, 0.6); font-weight: 700; font-size: 12px; padding: 16px 0; }
   nav button.active { color: #ff6b35; }
+  .calhead { display: flex; justify-content: space-between; align-items: center; margin: 8px 0 12px; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+  .cal-dow { color: #999; font-size: 12px; text-align: center; }
+  .cal-cell { background: rgba(255, 255, 255, 0.07); border: 1px solid rgba(255, 255, 255, 0.12); color: #fff; border-radius: 12px; aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 15px; padding: 2px; }
+  .cal-cell.empty { background: none; border: none; }
+  .cal-cell.today { border-color: #ff6b35; }
+  .cal-cell.sel { background: rgba(255, 255, 255, 0.25); }
+  .dot { width: 6px; height: 6px; border-radius: 50%; margin-top: 4px; }
+  .dot.pesi { background: #ff6b35; }
+  .dot.cardio { background: #2ec4b6; }
+  .dot.planned { background: rgba(255, 255, 255, 0.35); }
+  .banner { border: 1px solid rgba(255, 107, 53, 0.6); }
 </style>
 </head>
 <body>
@@ -69,6 +81,7 @@
   <button data-tab="oggi">OGGI</button>
   <button data-tab="pesi">PESI</button>
   <button data-tab="cardio">CARDIO</button>
+  <button data-tab="cal">CAL</button>
   <button data-tab="piano">PIANO</button>
 </nav>
 <script>
@@ -97,6 +110,8 @@
     exercises: ROUTINE.map((r) => r.name),
     sets: [],
     cardio: [],
+    log: {},       // allenamenti fatti: { 'YYYY-MM-DD': 'pesi' | 'cardio' }
+    payments: {},  // pagamenti: { 'YYYY-MM': 'YYYY-MM-DD' (data in cui è stato pagato) }
   };
   const KEY = 'palestra:v2';
 
@@ -164,6 +179,7 @@
       body = `<p class="muted">Giorno di riposo. Recupera bene!</p>`;
     }
     return `
+      ${paymentBanner()}
       <h1>Oggi, ${DAYS[todayIdx()]}</h1>
       <p class="muted">Settimana ${w}</p>
       <span class="badge ${t}">${LABEL[t]}</span>
@@ -272,10 +288,122 @@
       <p class="muted">Settimana A: 2 cardio + 1 pesi. Settimana B: 2 pesi + 1 cardio.</p>`;
   }
 
+  // ---------- CALENDARIO E PAGAMENTI ----------
+  let calMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+  let calSelected = todayISO();
+  const ymOf = (iso) => iso.slice(0, 7);
+  const isoOf = (y, m, d) => `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+  const fmtDate = (iso) => `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}`;
+  const monthName = (d) => d.toLocaleDateString('it-IT', { month: 'long', year: 'numeric' });
+
+  // Tipo di giornata programmato per una data, rispettando la settimana A/B
+  function plannedFor(iso) {
+    const [y, m, d] = iso.split('-').map(Number);
+    const date = new Date(y, m - 1, d);
+    const week = (isoWeek(date) + (data.swap ? 1 : 0)) % 2 === 0 ? 'A' : 'B';
+    return data.plans[week][(date.getDay() + 6) % 7];
+  }
+
+  // Banner in Oggi: solo il 1 e il 2 del mese, se il pagamento non è registrato
+  function paymentBanner() {
+    if (new Date().getDate() > 2 || data.payments[ymOf(todayISO())]) return '';
+    return `
+      <div class="card banner">
+        <strong>Pagamento palestra</strong>
+        <p class="muted">Ricordati di pagare la palestra: il 1 o il 2 del mese.</p>
+        <button class="small" data-paid="1">Segna pagato oggi</button>
+      </div>`;
+  }
+
+  function calScreen() {
+    const y = calMonth.getFullYear(), m = calMonth.getMonth();
+    const offset = (new Date(y, m, 1).getDay() + 6) % 7;
+    const total = new Date(y, m + 1, 0).getDate();
+    const todayStr = todayISO();
+    let cells = '';
+    for (let i = 0; i < offset; i++) cells += '<div class="cal-cell empty"></div>';
+    for (let d = 1; d <= total; d++) {
+      const iso = isoOf(y, m, d);
+      const logged = data.log[iso];
+      const dot = logged ? `<span class="dot ${logged}"></span>`
+        : plannedFor(iso) !== 'riposo' ? '<span class="dot planned"></span>' : '<span class="dot"></span>';
+      cells += `<button class="cal-cell ${iso === calSelected ? 'sel' : ''} ${iso === todayStr ? 'today' : ''}" data-calday="${iso}">${d}${dot}</button>`;
+    }
+    const vym = `${y}-${String(m + 1).padStart(2, '0')}`;
+    const paid = data.payments[vym];
+    const type = data.log[calSelected];
+    return `
+      <h1>Calendario</h1>
+      <div class="calhead">
+        <button class="small" data-calprev="1">‹</button>
+        <strong style="text-transform: capitalize">${monthName(calMonth)}</strong>
+        <button class="small" data-calnext="1">›</button>
+      </div>
+      <div class="cal-grid">
+        ${['L', 'M', 'M', 'G', 'V', 'S', 'D'].map((l) => `<div class="cal-dow">${l}</div>`).join('')}
+        ${cells}
+      </div>
+      <p class="muted">Pallino pieno: allenamento fatto. Pallino chiaro: programmato.</p>
+      <div class="card">
+        <strong>${fmtDate(calSelected)}</strong>
+        <p class="muted">Programmato: ${LABEL[plannedFor(calSelected)]}</p>
+        <div class="row">
+          ${['pesi', 'cardio'].map((t) => `<button class="chip ${type === t ? 'on' : ''}" data-log="${t}">${LABEL[t]} fatto</button>`).join('')}
+        </div>
+      </div>
+      <h2>Pagamento palestra</h2>
+      <div class="card">
+        <strong style="text-transform: capitalize">${monthName(calMonth)}</strong>
+        <p class="muted">${paid ? 'Pagato il ' + fmtDate(paid) : 'Non ancora pagato'}</p>
+        <div class="row">
+          ${paid
+            ? `<button class="small" data-unpaid="${vym}">Annulla pagamento</button>`
+            : `<button class="primary" data-paidm="${vym}">Segna pagato</button>`}
+        </div>
+      </div>
+      <h2>Promemoria</h2>
+      <p class="muted">Aggiunge al Calendario dell'iPhone un promemoria per il pagamento il 1 e il 2 di ogni mese.</p>
+      <button class="primary" data-ics="1">Scarica promemoria pagamento</button>`;
+  }
+
+  // File .ics con evento ricorrente il 1 e il 2 di ogni mese, con avviso
+  function downloadIcs() {
+    const now = new Date();
+    const start = now.getDate() <= 2 ? new Date(now.getFullYear(), now.getMonth(), 1) : new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    const stamp = `${start.getFullYear()}${String(start.getMonth() + 1).padStart(2, '0')}${String(start.getDate()).padStart(2, '0')}`;
+    const ics = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//Palestra//IT',
+      'BEGIN:VEVENT',
+      'UID:palestra-pagamento-mensile@palestra',
+      `DTSTAMP:${stamp}T090000`,
+      `DTSTART:${stamp}T090000`,
+      'RRULE:FREQ=MONTHLY;BYMONTHDAY=1,2',
+      'SUMMARY:Pagamento palestra',
+      'DESCRIPTION:Pagare la palestra (1 o 2 del mese).',
+      'BEGIN:VALARM',
+      'ACTION:DISPLAY',
+      'DESCRIPTION:Pagamento palestra',
+      'TRIGGER:-PT0M',
+      'END:VALARM',
+      'END:VEVENT',
+      'END:VCALENDAR',
+    ].join('\r\n');
+    const url = URL.createObjectURL(new Blob([ics], { type: 'text/calendar' }));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'palestra-pagamento.ics';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
   // ---------- RENDER E EVENTI ----------
   function render() {
     document.getElementById('app').innerHTML =
-      tab === 'oggi' ? oggi() : tab === 'pesi' ? pesi() : tab === 'cardio' ? cardio() : piano();
+      tab === 'oggi' ? oggi() : tab === 'pesi' ? pesi() : tab === 'cardio' ? cardio() : tab === 'cal' ? calScreen() : piano();
     document.querySelectorAll('nav button').forEach((b) => b.classList.toggle('active', b.dataset.tab === tab));
     window.scrollTo(0, 0);
   }
@@ -338,6 +466,23 @@
       return render();
     }
     if (d.swap) { data.swap = !data.swap; save(); return render(); }
+
+    if (d.calprev !== undefined) { calMonth = new Date(calMonth.getFullYear(), calMonth.getMonth() - 1, 1); return render(); }
+    if (d.calnext !== undefined) { calMonth = new Date(calMonth.getFullYear(), calMonth.getMonth() + 1, 1); return render(); }
+    if (d.calday) { calSelected = d.calday; return render(); }
+    if (d.log) {
+      if (data.log[calSelected] === d.log) delete data.log[calSelected];
+      else data.log[calSelected] = d.log;
+      save();
+      return render();
+    }
+    if (d.paid !== undefined || d.paidm) {
+      data.payments[d.paidm || ymOf(todayISO())] = todayISO();
+      save();
+      return render();
+    }
+    if (d.unpaid) { delete data.payments[d.unpaid]; save(); return render(); }
+    if (d.ics) return downloadIcs();
   });
 
   // Salva le bozze mentre si scrive, senza ridisegnare la pagina
