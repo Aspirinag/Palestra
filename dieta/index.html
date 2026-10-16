@@ -422,6 +422,10 @@
           json.piani.forEach((p) => {
             if (!p.dal || !Array.isArray(p.giorni) || p.giorni.length !== 7) throw new Error('piano');
             prof().piani = prof().piani.filter((x) => !(x.nome === p.nome && x.dal === p.dal));
+            // Il nuovo piano sostituisce quelli aperti: il precedente si chiude il giorno prima
+            prof().piani.forEach((old) => {
+              if (old.dal < p.dal && (!old.al || old.al >= p.dal)) old.al = addDays(p.dal, -1);
+            });
             prof().piani.push(p);
           });
           esito.push(`${json.piani.length} piano/i`);
