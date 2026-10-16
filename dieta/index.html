@@ -103,8 +103,11 @@
   const num = (v) => (v === '' || v == null || isNaN(Number(v)) ? null : Number(v));
 
   // Piano attivo per una data: dal <= data <= al (al vuoto = aperto)
+  // Se più piani coprono la data, vince quello iniziato più di recente
   function planFor(iso) {
-    return prof().piani.find((p) => p.dal <= iso && (!p.al || iso <= p.al)) || null;
+    const validi = prof().piani.filter((p) => p.dal <= iso && (!p.al || iso <= p.al));
+    if (!validi.length) return null;
+    return validi.reduce((a, b) => (b.dal > a.dal ? b : a));
   }
   function recFor(iso) {
     const r = prof().dieta[iso] || { slot: {}, olio: 0, acqua: 0 };
