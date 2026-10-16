@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Palestra">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#111111">
+<title>Palestra</title>
+<link rel="apple-touch-icon" href="icona.png">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: #111; color: #fff; font-family: -apple-system, system-ui, sans-serif; }
+  body { padding-bottom: calc(64px + env(safe-area-inset-bottom)); padding-top: env(safe-area-inset-top); }
+  main { padding: 20px; }
+  h1 { font-size: 28px; margin: 8px 0 16px; }
+  h2 { font-size: 20px; margin: 28px 0 8px; }
+  .muted { color: #999; font-size: 14px; margin: 4px 0; }
+  .card { background: #1c1c1e; border-radius: 12px; padding: 14px; margin-bottom: 12px; }
+  .between { display: flex; justify-content: space-between; align-items: center; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 8px 0; }
+  .grow { flex: 1; }
+  input { background: #2c2c2e; color: #fff; border: none; border-radius: 8px; padding: 10px 12px; font-size: 16px; min-width: 80px; }
+  input::placeholder { color: #777; }
+  button { font: inherit; border: none; cursor: pointer; }
+  .primary { display: block; width: 100%; background: #ff6b35; color: #fff; font-weight: 700; font-size: 16px; border-radius: 12px; padding: 14px; margin: 12px 0; }
+  .small { background: #2c2c2e; color: #fff; font-weight: 600; border-radius: 8px; padding: 10px 14px; }
+  .chip { background: #2c2c2e; color: #fff; font-weight: 600; border-radius: 999px; padding: 8px 14px; }
+  .chip.on { background: #2ec4b6; }
+  .link { background: none; color: #ff453a; font-size: 14px; padding: 0; }
+  .badge { display: inline-block; color: #fff; font-weight: 700; border-radius: 999px; padding: 6px 14px; margin-bottom: 16px; }
+  .badge.small { margin: 0; font-size: 13px; }
+  .pesi { background: #ff6b35; }
+  .cardio { background: #2ec4b6; }
+  .riposo { background: #555; }
+  .timer { font-size: 56px; font-weight: 200; font-variant-numeric: tabular-nums; }
+  .planrow { display: flex; justify-content: space-between; align-items: center; width: 100%; background: #1c1c1e; color: #fff; border-radius: 12px; padding: 14px; margin-bottom: 10px; font-size: 17px; }
+  nav { position: fixed; bottom: 0; left: 0; right: 0; display: flex; background: #161616; border-top: 1px solid #333; padding-bottom: env(safe-area-inset-bottom); }
+  nav button { flex: 1; background: none; color: #777; font-weight: 700; font-size: 12px; padding: 14px 0; }
+  nav button.active { color: #ff6b35; }
+</style>
+</head>
+<body>
+<main id="app"></main>
+<nav>
+  <button data-tab="oggi">OGGI</button>
+  <button data-tab="pesi">PESI</button>
+  <button data-tab="cardio">CARDIO</button>
+  <button data-tab="piano">PIANO</button>
+</nav>
+<script>
+  const DAYS = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
+  const LABEL = { pesi: 'Pesi', cardio: 'Cardio', riposo: 'Riposo' };
+  const CYCLE = ['riposo', 'pesi', 'cardio'];
+  const CARDIO_TYPES = ['Corsa', 'Bici', 'Ellittica', 'Nuoto', 'Camminata'];
+  // Scheda pesi: serie e ripetizioni proposte (modificabili nel codice)
+  const ROUTINE = [
+    { name: 'Leg press', target: '3 × 10–12' },
+    { name: 'Chest press', target: '3 × 10–12' },
+    { name: 'Lat machine', target: '3 × 10–12' },
+    { name: 'Leg curl', target: '3 × 10–12' },
+    { name: 'Shoulder press', target: '3 × 10–12' },
+    { name: 'Seated row', target: '3 × 10–12' },
+    { name: 'Addominali', target: '3 × 15' },
+  ];
+  // Settimana A: 2 cardio + 1 pesi. Settimana B: 2 pesi + 1 cardio. Lun = 0
+  const DEFAULT = {
+    plans: {
+      A: ['cardio', 'riposo', 'pesi', 'riposo', 'cardio', 'riposo', 'riposo'],
+      B: ['pesi', 'riposo', 'cardio', 'riposo', 'pesi', 'riposo', 'riposo'],
+    },
+    swap: false,            // inverte A/B se la settimana corrente non corrisponde
+    cardioMode: 'intervalli', // 'intervalli' oppure 'continuo'
+    exercises: ROUTINE.map((r) => r.name),
+    sets: [],
+    cardio: [],
+  };
+  const KEY = 'palestra:v2';
+
+  let data = load();
+  let tab = 'oggi';
+  let cardioType = CARDIO_TYPES[0];
+  let draft = {};        // bozze dei campi pesi (per indice esercizio) e cardio
+  let timer = { left: 0, id: null };
+
+  function load() {
+    try {
+      return { ...structuredClone(DEFAULT), ...JSON.parse(localStorage.getItem(KEY) || '{}') };
+    } catch (e) {
+      return structuredClone(DEFAULT);
+    }
+  }
+  function save() { localStorage.setItem(KEY, JSON.stringify(data)); }
+
+  const todayIdx = () => (new Date().getDay() + 6) % 7; // Lunedì = 0
+  function todayISO() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }
+  const fmt = (s) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+  // Numero della settimana ISO, usato per alternare A e B
+  function isoWeek(date) {
+    const t = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    const day = t.getUTCDay() || 7;
+    t.setUTCDate(t.getUTCDate() + 4 - day);
+    const yearStart = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
+    return Math.ceil(((t - yearStart) / 86400000 + 1) / 7);
+  }
+  function currentWeek() {
+    return (isoWeek(new Date()) + (data.swap ? 1 : 0)) % 2 === 0 ? 'A' : 'B';
+  }
+  const targetOf = (name) => (ROUTINE.find((r) => r.name === name) || {}).target || '';
+
+  // ---------- OGGI ----------
+  function oggi() {
+    const w = currentWeek();
+    const t = data.plans[w][todayIdx()];
+    let body;
+    if (t === 'cardio') {
+      const mode = data.cardioMode;
+      body = `
+        <div class="card"><strong>Riscaldamento</strong><p class="muted">8 min di cardio leggero</p></div>
+        <div class="card">
+          <strong>Parte centrale</strong>
+          <p class="muted">${mode === 'intervalli' ? '3 volte: 3 min sostenuti + 2 min lenti' : '30 min sostenuti'}</p>
+          <div class="row">
+            <button class="chip ${mode === 'intervalli' ? 'on' : ''}" data-mode="intervalli">3 × intervalli</button>
+            <button class="chip ${mode === 'continuo' ? 'on' : ''}" data-mode="continuo">30 min continui</button>
+          </div>
+        </div>
+        <div class="card"><strong>Defaticamento</strong><p class="muted">5–7 min a ritmo lento</p></div>
+        <button class="primary" data-go="cardio">Registra sessione</button>`;
+    } else if (t === 'pesi') {
+      body = `
+        <div class="card"><strong>Riscaldamento</strong><p class="muted">8 min di cardio leggero</p></div>
+        <button class="primary" data-go="pesi">Vai alla scheda pesi</button>
+        <div class="card"><strong>Defaticamento</strong><p class="muted">5–7 min di stretching leggero</p></div>`;
+    } else {
+      body = `<p class="muted">Giorno di riposo. Recupera bene!</p>`;
+    }
+    return `
+      <h1>Oggi, ${DAYS[todayIdx()]}</h1>
+      <p class="muted">Settimana ${w}</p>
+      <span class="badge ${t}">${LABEL[t]}</span>
+      ${body}
+      <h2>Timer di recupero</h2>
+      <div class="timer" id="timer">${fmt(timer.left)}</div>
+      <div class="row">
+        ${[60, 90, 120].map((s) => `<button class="small" data-rest="${s}">${s}s</button>`).join('')}
+        ${timer.id ? `<button class="small" data-stop="1">Stop</button>` : ''}
+      </div>`;
+  }
+  function startRest(sec) {
+    stopRest(false);
+    timer.left = sec;
+    timer.id = setInterval(() => {
+      timer.left--;
+      if (timer.left <= 0) {
+        stopRest(true);
+      } else {
+        const el = document.getElementById('timer');
+        if (el) el.textContent = fmt(timer.left);
+      }
+    }, 1000);
+    render();
+  }
+  function stopRest(finished) {
+    clearInterval(timer.id);
+    timer.id = null;
+    timer.left = 0;
+    if (finished && navigator.vibrate) navigator.vibrate([300, 150, 300]);
+    if (finished) render();
+  }
+
+  // ---------- PESI ----------
+  function pesi() {
+    const cards = data.exercises.map((name, i) => {
+      const last = [...data.sets].reverse().find((s) => s.exercise === name);
+      const d = draft[i] || { kg: '', reps: '' };
+      const target = targetOf(name);
+      return `
+        <div class="card">
+          <div class="between">
+            <strong>${esc(name)}</strong>
+            <button class="link" data-remove="${i}">Rimuovi</button>
+          </div>
+          ${target ? `<p class="muted">Target: ${target}</p>` : ''}
+          ${last ? `<p class="muted">Ultima: ${last.kg} kg x ${last.reps} (${last.date})</p>` : ''}
+          <div class="row">
+            <input inputmode="decimal" placeholder="kg" value="${esc(d.kg)}" data-draft="${i}" data-field="kg">
+            <input inputmode="numeric" placeholder="reps" value="${esc(d.reps)}" data-draft="${i}" data-field="reps">
+            <button class="small" data-save="${i}">Salva</button>
+          </div>
+        </div>`;
+    }).join('');
+    return `
+      <h1>Scheda pesi</h1>
+      ${cards}
+      <div class="row">
+        <input id="newEx" class="grow" placeholder="Nuovo esercizio">
+        <button class="small" data-add="1">Aggiungi</button>
+      </div>`;
+  }
+
+  // ---------- CARDIO ----------
+  function cardio() {
+    const dr = draft.cardio || { min: '', km: '' };
+    const chips = CARDIO_TYPES.map((t) =>
+      `<button class="chip ${t === cardioType ? 'on' : ''}" data-ctype="${t}">${t}</button>`).join('');
+    const hist = data.cardio.length
+      ? data.cardio.map((c) => `
+          <div class="card">
+            <strong>${esc(c.type)} · ${c.minutes} min${c.km > 0 ? ` · ${c.km} km` : ''}</strong>
+            <p class="muted">${c.date}</p>
+          </div>`).join('')
+      : '<p class="muted">Nessuna sessione ancora.</p>';
+    return `
+      <h1>Cardio</h1>
+      <div class="row">${chips}</div>
+      <div class="row">
+        <input inputmode="numeric" placeholder="Minuti" value="${esc(dr.min)}" data-cdraft="min">
+        <input inputmode="decimal" placeholder="Km (opz.)" value="${esc(dr.km)}" data-cdraft="km">
+      </div>
+      <button class="primary" data-csave="1">Salva sessione</button>
+      <h2>Storico</h2>
+      ${hist}`;
+  }
+
+  // ---------- PIANO ----------
+  function pianoSettimana(w) {
+    return `
+      <h2>Settimana ${w}</h2>
+      ${DAYS.map((d, i) => `
+        <button class="planrow" data-toggle="${w}:${i}">
+          <strong>${d}</strong>
+          <span class="badge small ${data.plans[w][i]}">${LABEL[data.plans[w][i]]}</span>
+        </button>`).join('')}`;
+  }
+  function piano() {
+    return `
+      <h1>Piano settimanale</h1>
+      <p class="muted">Questa settimana è la <strong>${currentWeek()}</strong>.</p>
+      <button class="small" data-swap="1">Scambia A e B</button>
+      <p class="muted">Tocca un giorno per cambiarne il tipo.</p>
+      ${pianoSettimana('A')}
+      ${pianoSettimana('B')}
+      <p class="muted">Settimana A: 2 cardio + 1 pesi. Settimana B: 2 pesi + 1 cardio.</p>`;
+  }
+
+  // ---------- RENDER E EVENTI ----------
+  function render() {
+    document.getElementById('app').innerHTML =
+      tab === 'oggi' ? oggi() : tab === 'pesi' ? pesi() : tab === 'cardio' ? cardio() : piano();
+    document.querySelectorAll('nav button').forEach((b) => b.classList.toggle('active', b.dataset.tab === tab));
+    window.scrollTo(0, 0);
+  }
+
+  document.addEventListener('click', (e) => {
+    const b = e.target.closest('button');
+    if (!b) return;
+    const d = b.dataset;
+
+    if (d.tab || d.go) { tab = d.tab || d.go; return render(); }
+    if (d.rest) return startRest(Number(d.rest));
+    if (d.stop) { stopRest(false); return render(); }
+    if (d.mode) { data.cardioMode = d.mode; save(); return render(); }
+
+    if (d.save !== undefined) {
+      const i = Number(d.save);
+      const dr = draft[i] || {};
+      const kg = parseFloat(String(dr.kg || '').replace(',', '.'));
+      const reps = parseInt(dr.reps, 10);
+      if (isNaN(kg) || isNaN(reps)) return alert('Inserisci kg e ripetizioni');
+      data.sets.push({ date: todayISO(), exercise: data.exercises[i], kg, reps });
+      delete draft[i];
+      save();
+      return render();
+    }
+    if (d.remove !== undefined) {
+      data.exercises.splice(Number(d.remove), 1);
+      draft = {};
+      save();
+      return render();
+    }
+    if (d.add) {
+      const v = document.getElementById('newEx').value.trim();
+      if (!v || data.exercises.includes(v)) return;
+      data.exercises.push(v);
+      save();
+      return render();
+    }
+
+    if (d.ctype) { cardioType = d.ctype; return render(); }
+    if (d.csave) {
+      const dr = draft.cardio || {};
+      const min = parseInt(dr.min, 10);
+      if (isNaN(min) || min <= 0) return alert('Inserisci i minuti');
+      data.cardio.unshift({
+        date: todayISO(),
+        type: cardioType,
+        minutes: min,
+        km: parseFloat(String(dr.km || '').replace(',', '.')) || 0,
+      });
+      draft.cardio = null;
+      save();
+      return render();
+    }
+
+    if (d.toggle !== undefined) {
+      const [w, i] = d.toggle.split(':');
+      data.plans[w][Number(i)] = CYCLE[(CYCLE.indexOf(data.plans[w][Number(i)]) + 1) % CYCLE.length];
+      save();
+      return render();
+    }
+    if (d.swap) { data.swap = !data.swap; save(); return render(); }
+  });
+
+  // Salva le bozze mentre si scrive, senza ridisegnare la pagina
+  document.addEventListener('input', (e) => {
+    const t = e.target;
+    if (t.dataset.draft !== undefined) {
+      const i = t.dataset.draft;
+      draft[i] = { ...(draft[i] || { kg: '', reps: '' }), [t.dataset.field]: t.value };
+    } else if (t.dataset.cdraft !== undefined) {
+      draft.cardio = { ...(draft.cardio || { min: '', km: '' }), [t.dataset.cdraft]: t.value };
+    }
+  });
+
+  render();
+</script>
+</body>
+</html>
