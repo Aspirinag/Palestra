@@ -51,6 +51,7 @@
   .check { display: flex; align-items: center; gap: 12px; width: 100%; background: none; color: #fff; text-align: left; font-size: 16px; padding: 8px 0; }
   .box { width: 24px; height: 24px; flex: none; border-radius: 7px; border: 2px solid rgba(255, 255, 255, 0.3); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; }
   .check.on .box { background: #d4ff3f; border-color: #d4ff3f; color: #0a0a0a; }
+  .check .pic { width: 36px; height: 36px; }
   nav {
     position: fixed; left: 12px; right: 12px;
     bottom: calc(12px + env(safe-area-inset-bottom));
@@ -109,8 +110,8 @@
 
   // Riscaldamento e defaticamento: checklist per ogni sessione
   const WARM = {
-    pesi: ['Cardio leggero 8 min', 'Mobilità spalle e anche 2 min', '2 serie leggere per ogni macchina'],
-    cardio: ['Cardio leggero 8 min', 'Allunghi dinamici 2 min'],
+    pesi: ['Cardio leggero 8 min', 'Mobilità di spalle e anche (2 min)'],
+    cardio: ['Cardio leggero 8 min', 'Allunghi dinamici (2 min)'],
   };
   const COOL = { pesi: '5–7 min di stretching leggero', cardio: '5–7 min a ritmo lento' };
 
@@ -187,8 +188,8 @@
   }
   const targetOf = (name) => (ROUTINE.find((r) => r.name === name) || {}).target || '';
   const section = (title, inner) => `<h2>${title}</h2><div class="card">${inner}</div>`;
-  const checkRow = (key, label, done) =>
-    `<button class="check ${done[key] ? 'on' : ''}" data-check="${key}"><span class="box">${done[key] ? '✓' : ''}</span><span>${label}</span></button>`;
+  const checkRow = (key, label, done, icon = '') =>
+    `<button class="check ${done[key] ? 'on' : ''}" data-check="${key}"><span class="box">${done[key] ? '✓' : ''}</span>${icon}<span>${label}</span></button>`;
 
   // ---------- OGGI ----------
   function oggi() {
@@ -214,7 +215,10 @@
         <button class="primary" data-go="cardio">Registra sessione</button>`;
     } else if (t === 'pesi') {
       body = `
-        ${section('Riscaldamento', WARM.pesi.map((x, i) => checkRow(`pesi-w${i}`, x, done)).join(''))}
+        ${section('Riscaldamento', [
+          ...WARM.pesi.map((x, i) => checkRow(`pesi-w${i}`, x, done)),
+          ...data.exercises.map((name) => checkRow(`pesi-ex-${name}`, `${esc(name)}: 1 serie leggera, circa metà carico`, done, picFor(name))),
+        ].join(''))}
         <h2>Esercizi</h2>
         ${data.exercises.map((name) => `
           <div class="card ex">${picFor(name)}<div><strong>${esc(name)}</strong><p class="muted">${targetOf(name)}</p></div></div>`).join('')}
@@ -273,11 +277,11 @@
             <div class="ex">${picFor(name)}<strong>${esc(name)}</strong></div>
             <button class="link" data-remove="${i}">Rimuovi</button>
           </div>
-          ${target ? `<p class="muted">Target: ${target}</p>` : ''}
-          ${last ? `<p class="muted">Ultima: ${last.kg} kg x ${last.reps} (${last.date})</p>` : ''}
+          ${target ? `<p class="muted">Obiettivo: ${target}</p>` : ''}
+          ${last ? `<p class="muted">Ultima volta: ${last.kg} kg × ${last.reps} (${fmtDate(last.date)})</p>` : ''}
           <div class="row">
             <input inputmode="decimal" placeholder="kg" value="${esc(d.kg)}" data-draft="${i}" data-field="kg">
-            <input inputmode="numeric" placeholder="reps" value="${esc(d.reps)}" data-draft="${i}" data-field="reps">
+            <input inputmode="numeric" placeholder="rip." value="${esc(d.reps)}" data-draft="${i}" data-field="reps">
             <button class="small" data-save="${i}">Salva</button>
           </div>
         </div>`;
@@ -302,13 +306,13 @@
             <strong>${esc(c.type)} · ${c.minutes} min${c.km > 0 ? ` · ${c.km} km` : ''}</strong>
             <p class="muted">${c.date}</p>
           </div>`).join('')
-      : '<p class="muted">Nessuna sessione ancora.</p>';
+      : '<p class="muted">Nessuna sessione registrata.</p>';
     return `
       <h1>Cardio</h1>
       <div class="row">${chips}</div>
       <div class="row">
         <input inputmode="numeric" placeholder="Minuti" value="${esc(dr.min)}" data-cdraft="min">
-        <input inputmode="decimal" placeholder="Km (opz.)" value="${esc(dr.km)}" data-cdraft="km">
+        <input inputmode="decimal" placeholder="Km (facoltativi)" value="${esc(dr.km)}" data-cdraft="km">
       </div>
       <button class="primary" data-csave="1">Salva sessione</button>
       <h2>Storico</h2>
@@ -333,7 +337,7 @@
       <p class="muted">Tocca un giorno per cambiarne il tipo.</p>
       ${pianoSettimana('A')}
       ${pianoSettimana('B')}
-      <p class="muted">Settimana A: 2 cardio + 1 pesi. Settimana B: 2 pesi + 1 cardio.</p>`;
+      <p class="muted">Settimana A: 2 giorni di cardio e 1 di pesi. Settimana B: 2 giorni di pesi e 1 di cardio.</p>`;
   }
 
   // ---------- CALENDARIO E PAGAMENTI ----------
@@ -358,12 +362,14 @@
     const day = now.getDate();
     if (day > 2 && day < 25) return '';
     let target = ymOf(todayISO());
-    let text = 'Oggi è il giorno di pagare la palestra (1 o 2 del mese).';
+    let text = 'Oggi si paga la palestra (1 o 2 del mese).';
     if (day >= 25) {
       const first = new Date(now.getFullYear(), now.getMonth() + 1, 1);
       target = `${first.getFullYear()}-${String(first.getMonth() + 1).padStart(2, '0')}`;
       const days = Math.round((first - new Date(now.getFullYear(), now.getMonth(), day)) / 86400000);
-      text = `Tra ${days} giorni c'è da pagare la palestra (1 o 2 del mese).`;
+      text = days === 1
+        ? 'Domani si paga la palestra (1 o 2 del mese).'
+        : `Tra ${days} giorni si paga la palestra (1 o 2 del mese).`;
     }
     if (data.payments[target]) return '';
     return `
@@ -403,7 +409,7 @@
         ${['L', 'M', 'M', 'G', 'V', 'S', 'D'].map((l) => `<div class="cal-dow">${l}</div>`).join('')}
         ${cells}
       </div>
-      <p class="muted">Pieno: fatto. Chiaro: programmato. ✕: non sei andato.</p>
+      <p class="muted">Pallino pieno: allenamento fatto. Pallino chiaro: programmato. ✕: non andato.</p>
       <div class="card">
         <strong>${fmtDate(calSelected)}</strong>
         <p class="muted">Programmato: ${LABEL[plannedFor(calSelected)]}</p>
