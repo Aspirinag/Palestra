@@ -6,16 +6,16 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Palestra">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#0a0a0a">
+<meta name="theme-color" content="#2c2c36">
 <title>Palestra</title>
 <link rel="apple-touch-icon" href="icona.png">
 <style>
   * { box-sizing: border-box; }
   html, body { margin: 0; color: #fff; font-family: -apple-system, system-ui, sans-serif; }
-  html { background: #0a0a0a; }
+  html { background: #2c2c36; }
   body {
     min-height: 100vh;
-    background: radial-gradient(circle at 85% 0%, rgba(212, 255, 63, 0.10), transparent 40%), #0a0a0a;
+    background: radial-gradient(circle at 85% 0%, rgba(212, 255, 63, 0.18), transparent 42%), linear-gradient(180deg, #3d3d4a 0%, #2a2a34 100%);
     background-attachment: fixed;
     padding-bottom: calc(110px + env(safe-area-inset-bottom));
     padding-top: env(safe-area-inset-top);
@@ -23,20 +23,20 @@
   main { padding: 20px; }
   h1 { font-size: 28px; margin: 8px 0 16px; }
   h2 { font-size: 20px; margin: 24px 0 8px; }
-  .muted { color: #9a9a9a; font-size: 14px; margin: 4px 0; }
-  .card { background: rgba(255, 255, 255, 0.07); -webkit-backdrop-filter: blur(24px) saturate(160%); backdrop-filter: blur(24px) saturate(160%); border: 1px solid rgba(255, 255, 255, 0.12); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15), 0 8px 32px rgba(0, 0, 0, 0.3); border-radius: 20px; padding: 16px; margin-bottom: 12px; }
+  .muted { color: #d4d4dc; font-size: 14px; margin: 4px 0; }
+  .card { background: rgba(255, 255, 255, 0.14); -webkit-backdrop-filter: blur(24px) saturate(160%); backdrop-filter: blur(24px) saturate(160%); border: 1px solid rgba(255, 255, 255, 0.22); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15), 0 8px 32px rgba(0, 0, 0, 0.3); border-radius: 20px; padding: 16px; margin-bottom: 12px; }
   .between { display: flex; justify-content: space-between; align-items: center; }
   .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 8px 0; }
   .grow { flex: 1; }
   .ex { display: flex; align-items: center; gap: 12px; }
   .pic { width: 52px; height: 52px; flex: none; fill: none; stroke: currentColor; stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; color: #d4ff3f; }
   .pic .base { stroke-width: 4; opacity: 0.35; }
-  input { background: rgba(255, 255, 255, 0.08); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); color: #fff; border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 12px; padding: 10px 12px; font-size: 16px; min-width: 80px; }
-  input::placeholder { color: #6b6b6b; }
+  input { background: rgba(255, 255, 255, 0.18); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); color: #fff; border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 12px; padding: 10px 12px; font-size: 16px; min-width: 80px; }
+  input::placeholder { color: #b0b0bb; }
   button { font: inherit; border: none; cursor: pointer; }
   .primary { display: block; width: 100%; background: linear-gradient(rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0) 55%), #d4ff3f; color: #0a0a0a; -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.3); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 8px 24px rgba(212, 255, 63, 0.2); font-weight: 700; font-size: 16px; border-radius: 16px; padding: 14px; margin: 12px 0; }
-  .small { background: rgba(255, 255, 255, 0.09); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.14); color: #fff; font-weight: 600; border-radius: 12px; padding: 10px 14px; }
-  .chip { background: rgba(255, 255, 255, 0.09); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.14); color: #fff; font-weight: 600; border-radius: 999px; padding: 8px 14px; }
+  .small { background: rgba(255, 255, 255, 0.18); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.25); color: #fff; font-weight: 600; border-radius: 12px; padding: 10px 14px; }
+  .chip { background: rgba(255, 255, 255, 0.18); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.25); color: #fff; font-weight: 600; border-radius: 999px; padding: 8px 14px; }
   .chip.on { background: #d4ff3f; color: #0a0a0a; border-color: #d4ff3f; }
   .chip.on.saltato { background: #f87171; border-color: #f87171; }
   .link { background: none; color: #f87171; font-size: 14px; padding: 0; }
@@ -44,32 +44,32 @@
   .badge.small { margin: 0; font-size: 13px; }
   .badge.pesi { color: #0a0a0a; }
   .pesi { background: #d4ff3f; }
-  .cardio { background: #60a5fa; }
-  .riposo { background: #3f3f46; }
+  .cardio { background: #7cb9ff; color: #0a0a0a; }
+  .riposo { background: #6e6e7a; }
   .timer { font-size: 56px; font-weight: 200; font-variant-numeric: tabular-nums; }
-  .planrow { display: flex; justify-content: space-between; align-items: center; width: 100%; background: rgba(255, 255, 255, 0.07); -webkit-backdrop-filter: blur(24px) saturate(160%); backdrop-filter: blur(24px) saturate(160%); border: 1px solid rgba(255, 255, 255, 0.12); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15), 0 8px 32px rgba(0, 0, 0, 0.3); color: #fff; border-radius: 20px; padding: 16px; margin-bottom: 10px; font-size: 17px; }
+  .planrow { display: flex; justify-content: space-between; align-items: center; width: 100%; background: rgba(255, 255, 255, 0.14); -webkit-backdrop-filter: blur(24px) saturate(160%); backdrop-filter: blur(24px) saturate(160%); border: 1px solid rgba(255, 255, 255, 0.22); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15), 0 8px 32px rgba(0, 0, 0, 0.3); color: #fff; border-radius: 20px; padding: 16px; margin-bottom: 10px; font-size: 17px; }
   .check { display: flex; align-items: center; gap: 12px; width: 100%; background: none; color: #fff; text-align: left; font-size: 16px; padding: 8px 0; }
-  .box { width: 24px; height: 24px; flex: none; border-radius: 7px; border: 2px solid rgba(255, 255, 255, 0.3); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; }
+  .box { width: 24px; height: 24px; flex: none; border-radius: 7px; border: 2px solid rgba(255, 255, 255, 0.5); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; }
   .check.on .box { background: #d4ff3f; border-color: #d4ff3f; color: #0a0a0a; }
   .check .pic { width: 36px; height: 36px; }
   nav {
     position: fixed; left: 12px; right: 12px;
     bottom: calc(12px + env(safe-area-inset-bottom));
     display: flex;
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.18);
     -webkit-backdrop-filter: blur(30px) saturate(180%);
     backdrop-filter: blur(30px) saturate(180%);
-    border: 1px solid rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.25);
     border-radius: 26px;
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 10px 30px rgba(0, 0, 0, 0.4);
     overflow: hidden;
   }
-  nav button { flex: 1; background: none; color: rgba(255, 255, 255, 0.5); font-weight: 700; font-size: 12px; padding: 16px 0; }
+  nav button { flex: 1; background: none; color: rgba(255, 255, 255, 0.75); font-weight: 700; font-size: 12px; padding: 16px 0; }
   nav button.active { color: #d4ff3f; }
   .calhead { display: flex; justify-content: space-between; align-items: center; margin: 8px 0 12px; }
   .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
-  .cal-dow { color: #9a9a9a; font-size: 12px; text-align: center; }
-  .cal-cell { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #fff; border-radius: 12px; aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 15px; padding: 2px; }
+  .cal-dow { color: #d4d4dc; font-size: 12px; text-align: center; }
+  .cal-cell { background: rgba(255, 255, 255, 0.12); border: 1px solid rgba(255, 255, 255, 0.2); color: #fff; border-radius: 12px; aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 15px; padding: 2px; }
   .cal-cell.empty { background: none; border: none; }
   .cal-cell.today { border-color: #d4ff3f; }
   .cal-cell.sel { background: rgba(255, 255, 255, 0.18); }
@@ -191,50 +191,71 @@
   const checkRow = (key, label, done, icon = '') =>
     `<button class="check ${done[key] ? 'on' : ''}" data-check="${key}"><span class="box">${done[key] ? '✓' : ''}</span>${icon}<span>${label}</span></button>`;
 
-  // ---------- OGGI ----------
+  // ---------- OGGI (panoramica con sotto-schede Cardio e Pesi) ----------
+  let oggiTab = null; // null = automatico, in base all'allenamento del giorno
+
+  // Sotto-scheda predefinita: allenamento di oggi, altrimenti il prossimo
+  function defaultOggiTab() {
+    const today = plannedFor(todayISO());
+    if (today !== 'riposo') return today;
+    for (let i = 1; i <= 7; i++) {
+      const d = new Date();
+      d.setDate(d.getDate() + i);
+      const t = plannedFor(isoOf(d.getFullYear(), d.getMonth(), d.getDate()));
+      if (t !== 'riposo') return t;
+    }
+    return 'pesi';
+  }
+
+  function cardioView(done) {
+    const mode = data.cardioMode;
+    return `
+      ${section('Riscaldamento', WARM.cardio.map((x, i) => checkRow(`cardio-w${i}`, x, done)).join(''))}
+      <h2>Parte centrale</h2>
+      <div class="card">
+        <div class="ex">${pic(PIC_RUN)}<strong>${mode === 'intervalli' ? '3 × (3 min sostenuti + 2 min lenti)' : '30 min sostenuti'}</strong></div>
+        <div class="row">
+          <button class="chip ${mode === 'intervalli' ? 'on' : ''}" data-mode="intervalli">3 × intervalli</button>
+          <button class="chip ${mode === 'continuo' ? 'on' : ''}" data-mode="continuo">30 min continui</button>
+        </div>
+      </div>
+      ${section('Defaticamento', checkRow('cardio-d0', COOL.cardio, done))}
+      <button class="primary" data-go="cardio">Registra sessione cardio</button>`;
+  }
+
+  function pesiView(done) {
+    return `
+      ${section('Riscaldamento', [
+        ...WARM.pesi.map((x, i) => checkRow(`pesi-w${i}`, x, done)),
+        ...data.exercises.map((name) => checkRow(`pesi-ex-${name}`, `${esc(name)}: 1 serie leggera, circa metà carico`, done, picFor(name))),
+      ].join(''))}
+      <h2>Esercizi</h2>
+      ${data.exercises.map((name) => `
+        <div class="card ex">${picFor(name)}<div><strong>${esc(name)}</strong><p class="muted">${targetOf(name)}</p></div></div>`).join('')}
+      ${section('Defaticamento', checkRow('pesi-d0', COOL.pesi, done))}
+      <button class="primary" data-go="pesi">Apri scheda pesi</button>`;
+  }
+
   function oggi() {
     const w = currentWeek();
     const t = data.plans[w][todayIdx()];
     const today = todayISO();
     const done = data.checks[today] || {};
     const skipped = data.log[today] === 'saltato';
-    let body;
-    if (t === 'cardio') {
-      const mode = data.cardioMode;
-      body = `
-        ${section('Riscaldamento', WARM.cardio.map((x, i) => checkRow(`cardio-w${i}`, x, done)).join(''))}
-        <h2>Parte centrale</h2>
-        <div class="card">
-          <div class="ex">${pic(PIC_RUN)}<strong>${mode === 'intervalli' ? '3 × (3 min sostenuti + 2 min lenti)' : '30 min sostenuti'}</strong></div>
-          <div class="row">
-            <button class="chip ${mode === 'intervalli' ? 'on' : ''}" data-mode="intervalli">3 × intervalli</button>
-            <button class="chip ${mode === 'continuo' ? 'on' : ''}" data-mode="continuo">30 min continui</button>
-          </div>
-        </div>
-        ${section('Defaticamento', checkRow('cardio-d0', COOL.cardio, done))}
-        <button class="primary" data-go="cardio">Registra sessione</button>`;
-    } else if (t === 'pesi') {
-      body = `
-        ${section('Riscaldamento', [
-          ...WARM.pesi.map((x, i) => checkRow(`pesi-w${i}`, x, done)),
-          ...data.exercises.map((name) => checkRow(`pesi-ex-${name}`, `${esc(name)}: 1 serie leggera, circa metà carico`, done, picFor(name))),
-        ].join(''))}
-        <h2>Esercizi</h2>
-        ${data.exercises.map((name) => `
-          <div class="card ex">${picFor(name)}<div><strong>${esc(name)}</strong><p class="muted">${targetOf(name)}</p></div></div>`).join('')}
-        <button class="primary" data-go="pesi">Vai alla scheda pesi</button>
-        ${section('Defaticamento', checkRow('pesi-d0', COOL.pesi, done))}`;
-    } else {
-      body = `<p class="muted">Giorno di riposo. Recupera bene!</p>`;
-    }
+    const active = oggiTab || defaultOggiTab();
+    const note = t === 'riposo' ? '<p class="muted">Oggi è riposo: ti mostro il prossimo allenamento.</p>' : '';
     const skip = t !== 'riposo'
       ? `<button class="small" data-skip="1">${skipped ? 'Annulla “non sono andato”' : 'Non sono andato oggi'}</button>`
       : '';
     return `
       <h1>Oggi, ${DAYS[todayIdx()]}</h1>
-      <p class="muted">Settimana ${w}</p>
-      <span class="badge ${t}">${LABEL[t]}</span>
-      ${body}
+      <p class="muted">Settimana ${w} · Programmato: ${LABEL[t]}</p>
+      ${note}
+      <div class="row">
+        <button class="chip ${active === 'cardio' ? 'on' : ''}" data-otab="cardio">Cardio</button>
+        <button class="chip ${active === 'pesi' ? 'on' : ''}" data-otab="pesi">Pesi</button>
+      </div>
+      ${active === 'cardio' ? cardioView(done) : pesiView(done)}
       ${skip}
       <h2>Timer di recupero</h2>
       <div class="timer" id="timer">${fmt(timer.left)}</div>
@@ -447,6 +468,7 @@
     if (d.rest) return startRest(Number(d.rest));
     if (d.stop) { stopRest(false); return render(); }
     if (d.mode) { data.cardioMode = d.mode; save(); return render(); }
+    if (d.otab) { oggiTab = d.otab; return render(); }
     if (d.check) {
       const k = todayISO();
       data.checks[k] = data.checks[k] || {};
