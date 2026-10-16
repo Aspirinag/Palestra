@@ -131,11 +131,11 @@
     cardio: [
       ['Cardio leggero (8 min)', 'Stesso ritmo facile del cardio: all\'inizio cammina, poi aumenta gradualmente.'],
       ['Oscillazioni delle gambe (10 per lato)', 'Come sopra: scalda anche e femorali prima degli intervalli.'],
-      ['Allunghi dinamici (2 min)', 'Affondo in avanti, ginocchio dietro vicino a terra, poi alterna con l\'altra gamba. Scalda quadricipiti e anche.'],
+      ['Allunghi dinamici (2 min): affondi', 'In piedi, fai un passo avanti con una gamba e piega entrambe le ginocchia, finché il ginocchio dietro si avvicina a terra senza toccarla. Spingi con il piede davanti per tornare su. Busto dritto. Fai 5 affondi per gamba, poi cambia gamba. Scalda quadricipiti e anche.'],
     ],
   };
   const warmupHelp = (type) => `
-    <details class="help">
+    <details class="help" open>
       <summary>Come si fa</summary>
       <ol>${WARM_HELP[type].map(([t, d]) => `<li><strong>${t}</strong><br><span class="muted">${d}</span></li>`).join('')}</ol>
     </details>`;
