@@ -179,7 +179,6 @@
       body = `<p class="muted">Giorno di riposo. Recupera bene!</p>`;
     }
     return `
-      ${paymentBanner()}
       <h1>Oggi, ${DAYS[todayIdx()]}</h1>
       <p class="muted">Settimana ${w}</p>
       <span class="badge ${t}">${LABEL[t]}</span>
@@ -304,14 +303,25 @@
     return data.plans[week][(date.getDay() + 6) % 7];
   }
 
-  // Banner in Oggi: solo il 1 e il 2 del mese, se il pagamento non è registrato
+  // Banner da 7 giorni prima (dal 25) fino al 2 del mese, finché il pagamento non è segnato
   function paymentBanner() {
-    if (new Date().getDate() > 2 || data.payments[ymOf(todayISO())]) return '';
+    const now = new Date();
+    const day = now.getDate();
+    if (day > 2 && day < 25) return '';
+    let target = ymOf(todayISO());
+    let text = 'Oggi è il giorno di pagare la palestra (1 o 2 del mese).';
+    if (day >= 25) {
+      const first = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+      target = `${first.getFullYear()}-${String(first.getMonth() + 1).padStart(2, '0')}`;
+      const days = Math.round((first - new Date(now.getFullYear(), now.getMonth(), day)) / 86400000);
+      text = `Tra ${days} giorni c'è da pagare la palestra (1 o 2 del mese).`;
+    }
+    if (data.payments[target]) return '';
     return `
       <div class="card banner">
         <strong>Pagamento palestra</strong>
-        <p class="muted">Ricordati di pagare la palestra: il 1 o il 2 del mese.</p>
-        <button class="small" data-paid="1">Segna pagato oggi</button>
+        <p class="muted">${text}</p>
+        <button class="small" data-paidm="${target}">Segna pagato</button>
       </div>`;
   }
 
@@ -361,49 +371,13 @@
             : `<button class="primary" data-paidm="${vym}">Segna pagato</button>`}
         </div>
       </div>
-      <h2>Promemoria</h2>
-      <p class="muted">Aggiunge al Calendario dell'iPhone un promemoria per il pagamento il 1 e il 2 di ogni mese.</p>
-      <button class="primary" data-ics="1">Scarica promemoria pagamento</button>`;
-  }
-
-  // File .ics con evento ricorrente il 1 e il 2 di ogni mese, con avviso
-  function downloadIcs() {
-    const now = new Date();
-    const start = now.getDate() <= 2 ? new Date(now.getFullYear(), now.getMonth(), 1) : new Date(now.getFullYear(), now.getMonth() + 1, 1);
-    const stamp = `${start.getFullYear()}${String(start.getMonth() + 1).padStart(2, '0')}${String(start.getDate()).padStart(2, '0')}`;
-    const ics = [
-      'BEGIN:VCALENDAR',
-      'VERSION:2.0',
-      'PRODID:-//Palestra//IT',
-      'BEGIN:VEVENT',
-      'UID:palestra-pagamento-mensile@palestra',
-      `DTSTAMP:${stamp}T090000`,
-      `DTSTART:${stamp}T090000`,
-      'RRULE:FREQ=MONTHLY;BYMONTHDAY=1,2',
-      'SUMMARY:Pagamento palestra',
-      'DESCRIPTION:Pagare la palestra (1 o 2 del mese).',
-      'BEGIN:VALARM',
-      'ACTION:DISPLAY',
-      'DESCRIPTION:Pagamento palestra',
-      'TRIGGER:-PT0M',
-      'END:VALARM',
-      'END:VEVENT',
-      'END:VCALENDAR',
-    ].join('\r\n');
-    const url = URL.createObjectURL(new Blob([ics], { type: 'text/calendar' }));
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'palestra-pagamento.ics';
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
+      <p class="muted">Il banner compare in tutte le schede dal 25 del mese fino al 2, finché il pagamento non è segnato.</p>`;
   }
 
   // ---------- RENDER E EVENTI ----------
   function render() {
-    document.getElementById('app').innerHTML =
-      tab === 'oggi' ? oggi() : tab === 'pesi' ? pesi() : tab === 'cardio' ? cardio() : tab === 'cal' ? calScreen() : piano();
+    document.getElementById('app').innerHTML = paymentBanner() +
+      (tab === 'oggi' ? oggi() : tab === 'pesi' ? pesi() : tab === 'cardio' ? cardio() : tab === 'cal' ? calScreen() : piano());
     document.querySelectorAll('nav button').forEach((b) => b.classList.toggle('active', b.dataset.tab === tab));
     window.scrollTo(0, 0);
   }
@@ -482,7 +456,6 @@
       return render();
     }
     if (d.unpaid) { delete data.payments[d.unpaid]; save(); return render(); }
-    if (d.ics) return downloadIcs();
   });
 
   // Salva le bozze mentre si scrive, senza ridisegnare la pagina
