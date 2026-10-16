@@ -6,73 +6,78 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Palestra">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#111111">
+<meta name="theme-color" content="#0a0a0a">
 <title>Palestra</title>
 <link rel="apple-touch-icon" href="icona.png">
 <style>
   * { box-sizing: border-box; }
   html, body { margin: 0; color: #fff; font-family: -apple-system, system-ui, sans-serif; }
-  html { background: #0b0b0f; }
+  html { background: #0a0a0a; }
   body {
     min-height: 100vh;
-    background:
-      radial-gradient(circle at 15% 8%, rgba(255, 107, 53, 0.55), transparent 38%),
-      radial-gradient(circle at 90% 45%, rgba(46, 196, 182, 0.45), transparent 42%),
-      radial-gradient(circle at 40% 100%, rgba(120, 90, 255, 0.35), transparent 45%),
-      #0b0b0f;
+    background: radial-gradient(circle at 85% 0%, rgba(212, 255, 63, 0.10), transparent 40%), #0a0a0a;
     background-attachment: fixed;
     padding-bottom: calc(110px + env(safe-area-inset-bottom));
     padding-top: env(safe-area-inset-top);
   }
   main { padding: 20px; }
   h1 { font-size: 28px; margin: 8px 0 16px; }
-  h2 { font-size: 20px; margin: 28px 0 8px; }
-  .muted { color: #999; font-size: 14px; margin: 4px 0; }
-  .card { background: rgba(255, 255, 255, 0.09); -webkit-backdrop-filter: blur(24px) saturate(180%); backdrop-filter: blur(24px) saturate(180%); border: 1px solid rgba(255, 255, 255, 0.18); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 8px 32px rgba(0, 0, 0, 0.25); border-radius: 20px; padding: 16px; margin-bottom: 12px; }
+  h2 { font-size: 20px; margin: 24px 0 8px; }
+  .muted { color: #9a9a9a; font-size: 14px; margin: 4px 0; }
+  .card { background: rgba(255, 255, 255, 0.07); -webkit-backdrop-filter: blur(24px) saturate(160%); backdrop-filter: blur(24px) saturate(160%); border: 1px solid rgba(255, 255, 255, 0.12); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15), 0 8px 32px rgba(0, 0, 0, 0.3); border-radius: 20px; padding: 16px; margin-bottom: 12px; }
   .between { display: flex; justify-content: space-between; align-items: center; }
   .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 8px 0; }
   .grow { flex: 1; }
-  input { background: rgba(255, 255, 255, 0.12); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); color: #fff; border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 12px; padding: 10px 12px; font-size: 16px; min-width: 80px; }
-  input::placeholder { color: #777; }
+  .ex { display: flex; align-items: center; gap: 12px; }
+  .pic { width: 52px; height: 52px; flex: none; fill: none; stroke: currentColor; stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; color: #d4ff3f; }
+  .pic .base { stroke-width: 4; opacity: 0.35; }
+  input { background: rgba(255, 255, 255, 0.08); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); color: #fff; border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 12px; padding: 10px 12px; font-size: 16px; min-width: 80px; }
+  input::placeholder { color: #6b6b6b; }
   button { font: inherit; border: none; cursor: pointer; }
-  .primary { display: block; width: 100%; background: linear-gradient(rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0) 55%), rgba(255, 107, 53, 0.85); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.3); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 8px 24px rgba(255, 107, 53, 0.35); color: #fff; font-weight: 700; font-size: 16px; border-radius: 16px; padding: 14px; margin: 12px 0; }
-  .small { background: rgba(255, 255, 255, 0.12); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.18); color: #fff; font-weight: 600; border-radius: 12px; padding: 10px 14px; }
-  .chip { background: rgba(255, 255, 255, 0.12); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.18); color: #fff; font-weight: 600; border-radius: 999px; padding: 8px 14px; }
-  .chip.on { background: rgba(46, 196, 182, 0.75); border-color: rgba(255, 255, 255, 0.35); }
-  .link { background: none; color: #ff453a; font-size: 14px; padding: 0; }
+  .primary { display: block; width: 100%; background: linear-gradient(rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0) 55%), #d4ff3f; color: #0a0a0a; -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.3); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 8px 24px rgba(212, 255, 63, 0.2); font-weight: 700; font-size: 16px; border-radius: 16px; padding: 14px; margin: 12px 0; }
+  .small { background: rgba(255, 255, 255, 0.09); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.14); color: #fff; font-weight: 600; border-radius: 12px; padding: 10px 14px; }
+  .chip { background: rgba(255, 255, 255, 0.09); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.14); color: #fff; font-weight: 600; border-radius: 999px; padding: 8px 14px; }
+  .chip.on { background: #d4ff3f; color: #0a0a0a; border-color: #d4ff3f; }
+  .chip.on.saltato { background: #f87171; border-color: #f87171; }
+  .link { background: none; color: #f87171; font-size: 14px; padding: 0; }
   .badge { display: inline-block; color: #fff; font-weight: 700; border-radius: 999px; padding: 6px 14px; margin-bottom: 16px; }
   .badge.small { margin: 0; font-size: 13px; }
-  .pesi { background: #ff6b35; }
-  .cardio { background: #2ec4b6; }
-  .riposo { background: #555; }
+  .badge.pesi { color: #0a0a0a; }
+  .pesi { background: #d4ff3f; }
+  .cardio { background: #60a5fa; }
+  .riposo { background: #3f3f46; }
   .timer { font-size: 56px; font-weight: 200; font-variant-numeric: tabular-nums; }
-  .planrow { display: flex; justify-content: space-between; align-items: center; width: 100%; background: rgba(255, 255, 255, 0.09); -webkit-backdrop-filter: blur(24px) saturate(180%); backdrop-filter: blur(24px) saturate(180%); border: 1px solid rgba(255, 255, 255, 0.18); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 8px 32px rgba(0, 0, 0, 0.25); color: #fff; border-radius: 20px; padding: 16px; margin-bottom: 10px; font-size: 17px; }
+  .planrow { display: flex; justify-content: space-between; align-items: center; width: 100%; background: rgba(255, 255, 255, 0.07); -webkit-backdrop-filter: blur(24px) saturate(160%); backdrop-filter: blur(24px) saturate(160%); border: 1px solid rgba(255, 255, 255, 0.12); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15), 0 8px 32px rgba(0, 0, 0, 0.3); color: #fff; border-radius: 20px; padding: 16px; margin-bottom: 10px; font-size: 17px; }
+  .check { display: flex; align-items: center; gap: 12px; width: 100%; background: none; color: #fff; text-align: left; font-size: 16px; padding: 8px 0; }
+  .box { width: 24px; height: 24px; flex: none; border-radius: 7px; border: 2px solid rgba(255, 255, 255, 0.3); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; }
+  .check.on .box { background: #d4ff3f; border-color: #d4ff3f; color: #0a0a0a; }
   nav {
     position: fixed; left: 12px; right: 12px;
     bottom: calc(12px + env(safe-area-inset-bottom));
     display: flex;
-    background: rgba(255, 255, 255, 0.1);
-    -webkit-backdrop-filter: blur(30px) saturate(200%);
-    backdrop-filter: blur(30px) saturate(200%);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.08);
+    -webkit-backdrop-filter: blur(30px) saturate(180%);
+    backdrop-filter: blur(30px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.14);
     border-radius: 26px;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 10px 30px rgba(0, 0, 0, 0.35);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 10px 30px rgba(0, 0, 0, 0.4);
     overflow: hidden;
   }
-  nav button { flex: 1; background: none; color: rgba(255, 255, 255, 0.6); font-weight: 700; font-size: 12px; padding: 16px 0; }
-  nav button.active { color: #ff6b35; }
+  nav button { flex: 1; background: none; color: rgba(255, 255, 255, 0.5); font-weight: 700; font-size: 12px; padding: 16px 0; }
+  nav button.active { color: #d4ff3f; }
   .calhead { display: flex; justify-content: space-between; align-items: center; margin: 8px 0 12px; }
   .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
-  .cal-dow { color: #999; font-size: 12px; text-align: center; }
-  .cal-cell { background: rgba(255, 255, 255, 0.07); border: 1px solid rgba(255, 255, 255, 0.12); color: #fff; border-radius: 12px; aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 15px; padding: 2px; }
+  .cal-dow { color: #9a9a9a; font-size: 12px; text-align: center; }
+  .cal-cell { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #fff; border-radius: 12px; aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 15px; padding: 2px; }
   .cal-cell.empty { background: none; border: none; }
-  .cal-cell.today { border-color: #ff6b35; }
-  .cal-cell.sel { background: rgba(255, 255, 255, 0.25); }
+  .cal-cell.today { border-color: #d4ff3f; }
+  .cal-cell.sel { background: rgba(255, 255, 255, 0.18); }
   .dot { width: 6px; height: 6px; border-radius: 50%; margin-top: 4px; }
-  .dot.pesi { background: #ff6b35; }
-  .dot.cardio { background: #2ec4b6; }
-  .dot.planned { background: rgba(255, 255, 255, 0.35); }
-  .banner { border: 1px solid rgba(255, 107, 53, 0.6); }
+  .dot.pesi { background: #d4ff3f; }
+  .dot.cardio { background: #60a5fa; }
+  .dot.planned { background: rgba(255, 255, 255, 0.3); }
+  .x { color: #f87171; font-weight: 800; font-size: 14px; line-height: 1; margin-top: 3px; }
+  .banner { border: 1px solid rgba(212, 255, 63, 0.45); }
 </style>
 </head>
 <body>
@@ -87,8 +92,10 @@
 <script>
   const DAYS = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
   const LABEL = { pesi: 'Pesi', cardio: 'Cardio', riposo: 'Riposo' };
+  const LOG_LABEL = { pesi: 'Pesi fatto', cardio: 'Cardio fatto', saltato: 'Non andato' };
   const CYCLE = ['riposo', 'pesi', 'cardio'];
   const CARDIO_TYPES = ['Corsa', 'Bici', 'Ellittica', 'Nuoto', 'Camminata'];
+
   // Scheda pesi: serie e ripetizioni proposte (modificabili nel codice)
   const ROUTINE = [
     { name: 'Leg press', target: '3 × 10–12' },
@@ -99,19 +106,48 @@
     { name: 'Seated row', target: '3 × 10–12' },
     { name: 'Addominali', target: '3 × 15' },
   ];
+
+  // Riscaldamento e defaticamento: checklist per ogni sessione
+  const WARM = {
+    pesi: ['Cardio leggero 8 min', 'Mobilità spalle e anche 2 min', '2 serie leggere per ogni macchina'],
+    cardio: ['Cardio leggero 8 min', 'Allunghi dinamici 2 min'],
+  };
+  const COOL = { pesi: '5–7 min di stretching leggero', cardio: '5–7 min a ritmo lento' };
+
+  // Pittogrammi: posizioni dell'esercizio (figura di profilo, rivolta a destra)
+  const PIC_RUN = { head: [54, 14], lines: [[[54, 34], [48, 58]], [[48, 58], [38, 72], [30, 88]], [[48, 58], [62, 70], [72, 84]], [[54, 36], [42, 44], [34, 36]], [[54, 36], [66, 46], [72, 40]]], base: [[[10, 96], [90, 96]]] };
+  const PIC_DEFAULT = { head: [50, 18], lines: [[[50, 34], [50, 60]], [[50, 60], [44, 84], [42, 96]], [[50, 60], [56, 84], [58, 96]], [[50, 38], [40, 54], [38, 64]], [[50, 38], [60, 54], [62, 64]]] };
+  const PICS = {
+    'Leg press': { head: [44, 24], lines: [[[44, 64], [44, 38]], [[44, 64], [70, 56], [88, 62]], [[44, 40], [36, 54], [38, 62]]], base: [[[30, 70], [60, 70]], [[84, 68], [96, 68]]] },
+    'Chest press': { head: [44, 24], lines: [[[44, 64], [44, 38]], [[44, 64], [66, 64], [66, 84]], [[44, 40], [64, 40], [84, 40]]], base: [[[30, 70], [60, 70]]] },
+    'Shoulder press': { head: [44, 24], lines: [[[44, 64], [44, 38]], [[44, 64], [66, 64], [66, 84]], [[44, 40], [32, 28], [30, 12]], [[44, 40], [58, 28], [62, 12]]], base: [[[30, 70], [60, 70]]] },
+    'Seated row': { head: [44, 24], lines: [[[44, 64], [44, 38]], [[44, 64], [66, 64], [66, 84]], [[44, 40], [34, 46], [40, 54]]], base: [[[30, 70], [60, 70]], [[62, 44], [78, 44]]] },
+    'Lat machine': { head: [50, 20], lines: [[[50, 56], [50, 34]], [[50, 56], [46, 76], [44, 94]], [[50, 56], [56, 76], [58, 94]], [[50, 36], [34, 44], [38, 20]], [[50, 36], [66, 44], [62, 20]]], base: [[[26, 6], [74, 6]]] },
+    'Leg curl': { head: [20, 44], lines: [[[30, 50], [52, 50]], [[52, 50], [72, 50], [84, 38]], [[32, 50], [26, 60], [36, 60]]], base: [[[14, 58], [90, 58]]] },
+    'Addominali': { head: [36, 58], lines: [[[66, 78], [44, 66]], [[66, 78], [80, 64], [90, 80]], [[44, 66], [38, 54], [46, 50]]], base: [[[14, 82], [92, 82]]] },
+  };
+  const pic = (p) => {
+    const pts = (l) => l.map((q) => q.join(',')).join(' ');
+    const base = (p.base || []).map((l) => `<polyline class="base" points="${pts(l)}"/>`).join('');
+    const lines = p.lines.map((l) => `<polyline points="${pts(l)}"/>`).join('');
+    return `<svg class="pic" viewBox="0 0 100 100" aria-hidden="true">${base}<circle cx="${p.head[0]}" cy="${p.head[1]}" r="7"/>${lines}</svg>`;
+  };
+  const picFor = (name) => pic(PICS[name] || PIC_DEFAULT);
+
   // Settimana A: 2 cardio + 1 pesi. Settimana B: 2 pesi + 1 cardio. Lun = 0
   const DEFAULT = {
     plans: {
       A: ['cardio', 'riposo', 'pesi', 'riposo', 'cardio', 'riposo', 'riposo'],
       B: ['pesi', 'riposo', 'cardio', 'riposo', 'pesi', 'riposo', 'riposo'],
     },
-    swap: false,            // inverte A/B se la settimana corrente non corrisponde
+    swap: false,              // inverte A/B se la settimana corrente non corrisponde
     cardioMode: 'intervalli', // 'intervalli' oppure 'continuo'
     exercises: ROUTINE.map((r) => r.name),
     sets: [],
     cardio: [],
-    log: {},       // allenamenti fatti: { 'YYYY-MM-DD': 'pesi' | 'cardio' }
-    payments: {},  // pagamenti: { 'YYYY-MM': 'YYYY-MM-DD' (data in cui è stato pagato) }
+    log: {},     // { 'YYYY-MM-DD': 'pesi' | 'cardio' | 'saltato' }
+    checks: {},  // { 'YYYY-MM-DD': { 'pesi-w0': true, ... } } riscaldamento e defaticamento
+    payments: {}, // { 'YYYY-MM': 'YYYY-MM-DD' (data in cui è stato pagato) }
   };
   const KEY = 'palestra:v2';
 
@@ -150,39 +186,52 @@
     return (isoWeek(new Date()) + (data.swap ? 1 : 0)) % 2 === 0 ? 'A' : 'B';
   }
   const targetOf = (name) => (ROUTINE.find((r) => r.name === name) || {}).target || '';
+  const section = (title, inner) => `<h2>${title}</h2><div class="card">${inner}</div>`;
+  const checkRow = (key, label, done) =>
+    `<button class="check ${done[key] ? 'on' : ''}" data-check="${key}"><span class="box">${done[key] ? '✓' : ''}</span><span>${label}</span></button>`;
 
   // ---------- OGGI ----------
   function oggi() {
     const w = currentWeek();
     const t = data.plans[w][todayIdx()];
+    const today = todayISO();
+    const done = data.checks[today] || {};
+    const skipped = data.log[today] === 'saltato';
     let body;
     if (t === 'cardio') {
       const mode = data.cardioMode;
       body = `
-        <div class="card"><strong>Riscaldamento</strong><p class="muted">8 min di cardio leggero</p></div>
+        ${section('Riscaldamento', WARM.cardio.map((x, i) => checkRow(`cardio-w${i}`, x, done)).join(''))}
+        <h2>Parte centrale</h2>
         <div class="card">
-          <strong>Parte centrale</strong>
-          <p class="muted">${mode === 'intervalli' ? '3 volte: 3 min sostenuti + 2 min lenti' : '30 min sostenuti'}</p>
+          <div class="ex">${pic(PIC_RUN)}<strong>${mode === 'intervalli' ? '3 × (3 min sostenuti + 2 min lenti)' : '30 min sostenuti'}</strong></div>
           <div class="row">
             <button class="chip ${mode === 'intervalli' ? 'on' : ''}" data-mode="intervalli">3 × intervalli</button>
             <button class="chip ${mode === 'continuo' ? 'on' : ''}" data-mode="continuo">30 min continui</button>
           </div>
         </div>
-        <div class="card"><strong>Defaticamento</strong><p class="muted">5–7 min a ritmo lento</p></div>
+        ${section('Defaticamento', checkRow('cardio-d0', COOL.cardio, done))}
         <button class="primary" data-go="cardio">Registra sessione</button>`;
     } else if (t === 'pesi') {
       body = `
-        <div class="card"><strong>Riscaldamento</strong><p class="muted">8 min di cardio leggero</p></div>
+        ${section('Riscaldamento', WARM.pesi.map((x, i) => checkRow(`pesi-w${i}`, x, done)).join(''))}
+        <h2>Esercizi</h2>
+        ${data.exercises.map((name) => `
+          <div class="card ex">${picFor(name)}<div><strong>${esc(name)}</strong><p class="muted">${targetOf(name)}</p></div></div>`).join('')}
         <button class="primary" data-go="pesi">Vai alla scheda pesi</button>
-        <div class="card"><strong>Defaticamento</strong><p class="muted">5–7 min di stretching leggero</p></div>`;
+        ${section('Defaticamento', checkRow('pesi-d0', COOL.pesi, done))}`;
     } else {
       body = `<p class="muted">Giorno di riposo. Recupera bene!</p>`;
     }
+    const skip = t !== 'riposo'
+      ? `<button class="small" data-skip="1">${skipped ? 'Annulla “non sono andato”' : 'Non sono andato oggi'}</button>`
+      : '';
     return `
       <h1>Oggi, ${DAYS[todayIdx()]}</h1>
       <p class="muted">Settimana ${w}</p>
       <span class="badge ${t}">${LABEL[t]}</span>
       ${body}
+      ${skip}
       <h2>Timer di recupero</h2>
       <div class="timer" id="timer">${fmt(timer.left)}</div>
       <div class="row">
@@ -221,7 +270,7 @@
       return `
         <div class="card">
           <div class="between">
-            <strong>${esc(name)}</strong>
+            <div class="ex">${picFor(name)}<strong>${esc(name)}</strong></div>
             <button class="link" data-remove="${i}">Rimuovi</button>
           </div>
           ${target ? `<p class="muted">Target: ${target}</p>` : ''}
@@ -335,9 +384,10 @@
     for (let d = 1; d <= total; d++) {
       const iso = isoOf(y, m, d);
       const logged = data.log[iso];
-      const dot = logged ? `<span class="dot ${logged}"></span>`
+      const mark = logged === 'saltato' ? '<span class="x">✕</span>'
+        : logged ? `<span class="dot ${logged}"></span>`
         : plannedFor(iso) !== 'riposo' ? '<span class="dot planned"></span>' : '<span class="dot"></span>';
-      cells += `<button class="cal-cell ${iso === calSelected ? 'sel' : ''} ${iso === todayStr ? 'today' : ''}" data-calday="${iso}">${d}${dot}</button>`;
+      cells += `<button class="cal-cell ${iso === calSelected ? 'sel' : ''} ${iso === todayStr ? 'today' : ''}" data-calday="${iso}">${d}${mark}</button>`;
     }
     const vym = `${y}-${String(m + 1).padStart(2, '0')}`;
     const paid = data.payments[vym];
@@ -353,12 +403,12 @@
         ${['L', 'M', 'M', 'G', 'V', 'S', 'D'].map((l) => `<div class="cal-dow">${l}</div>`).join('')}
         ${cells}
       </div>
-      <p class="muted">Pallino pieno: allenamento fatto. Pallino chiaro: programmato.</p>
+      <p class="muted">Pieno: fatto. Chiaro: programmato. ✕: non sei andato.</p>
       <div class="card">
         <strong>${fmtDate(calSelected)}</strong>
         <p class="muted">Programmato: ${LABEL[plannedFor(calSelected)]}</p>
         <div class="row">
-          ${['pesi', 'cardio'].map((t) => `<button class="chip ${type === t ? 'on' : ''}" data-log="${t}">${LABEL[t]} fatto</button>`).join('')}
+          ${['pesi', 'cardio', 'saltato'].map((t) => `<button class="chip ${type === t ? 'on' : ''} ${t}" data-log="${t}">${LOG_LABEL[t]}</button>`).join('')}
         </div>
       </div>
       <h2>Pagamento palestra</h2>
@@ -391,6 +441,20 @@
     if (d.rest) return startRest(Number(d.rest));
     if (d.stop) { stopRest(false); return render(); }
     if (d.mode) { data.cardioMode = d.mode; save(); return render(); }
+    if (d.check) {
+      const k = todayISO();
+      data.checks[k] = data.checks[k] || {};
+      data.checks[k][d.check] = !data.checks[k][d.check];
+      save();
+      return render();
+    }
+    if (d.skip !== undefined) {
+      const k = todayISO();
+      if (data.log[k] === 'saltato') delete data.log[k];
+      else data.log[k] = 'saltato';
+      save();
+      return render();
+    }
 
     if (d.save !== undefined) {
       const i = Number(d.save);
