@@ -52,6 +52,9 @@
   .box { width: 24px; height: 24px; flex: none; border-radius: 7px; border: 2px solid rgba(255, 255, 255, 0.5); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; }
   .check.on .box { background: #d4ff3f; border-color: #d4ff3f; color: #0a0a0a; }
   .check .pic { width: 36px; height: 36px; }
+  .help summary { color: #fff; font-weight: 600; padding: 6px 0; cursor: pointer; }
+  .help ol { padding-left: 20px; margin: 8px 0 0; }
+  .help li { margin-bottom: 12px; line-height: 1.4; }
   nav {
     position: fixed; left: 12px; right: 12px;
     bottom: calc(12px + env(safe-area-inset-bottom));
@@ -114,6 +117,28 @@
     cardio: ['Cardio leggero 8 min', 'Allunghi dinamici (2 min)'],
   };
   const COOL = { pesi: '5–7 min di stretching leggero', cardio: '5–7 min a ritmo lento' };
+
+  // Spiegazione di ogni esercizio di riscaldamento (10–15 ripetizioni per movimento, senza affaticarsi)
+  const WARM_HELP = {
+    pesi: [
+      ['Cardio leggero (5 min)', 'Tapis roulant a passo veloce o cyclette a ritmo facile: devi riuscire a parlare senza fatica.'],
+      ['Cerchi con le braccia (10 avanti, 10 indietro)', 'Braccia tese ai lati, fai cerchi piccoli che diventano più ampi. Scalda spalle e scapole.'],
+      ['Oscillazioni delle gambe (10 per lato)', 'In piedi, con una mano di appoggio, oscilla la gamba avanti e indietro, poi di lato. Scalda anche e femorali.'],
+      ['Squat a corpo libero (10 lenti)', 'Piedi alla larghezza delle spalle, scendi lentamente e risali. Scalda ginocchia e caviglie.'],
+      ['Gatto-cammello (8 lenti)', 'A quattro zampe: inarca la schiena verso il basso e poi verso l\'alto, lentamente. Scalda la colonna.'],
+      ['Rotazione del busto (6 per lato)', 'In piedi, braccia aperte, ruota il busto da una parte e dall\'altra tenendo il bacino fermo.'],
+    ],
+    cardio: [
+      ['Cardio leggero (8 min)', 'Stesso ritmo facile del cardio: all\'inizio cammina, poi aumenta gradualmente.'],
+      ['Oscillazioni delle gambe (10 per lato)', 'Come sopra: scalda anche e femorali prima degli intervalli.'],
+      ['Allunghi dinamici (2 min)', 'Affondo in avanti, ginocchio dietro vicino a terra, poi alterna con l\'altra gamba. Scalda quadricipiti e anche.'],
+    ],
+  };
+  const warmupHelp = (type) => `
+    <details class="help">
+      <summary>Come si fa</summary>
+      <ol>${WARM_HELP[type].map(([t, d]) => `<li><strong>${t}</strong><br><span class="muted">${d}</span></li>`).join('')}</ol>
+    </details>`;
 
   // Pittogrammi: posizioni dell'esercizio (figura di profilo, rivolta a destra)
   const PIC_RUN = { head: [54, 14], lines: [[[54, 34], [48, 58]], [[48, 58], [38, 72], [30, 88]], [[48, 58], [62, 70], [72, 84]], [[54, 36], [42, 44], [34, 36]], [[54, 36], [66, 46], [72, 40]]], base: [[[10, 96], [90, 96]]] };
@@ -210,7 +235,7 @@
   function cardioView(done) {
     const mode = data.cardioMode;
     return `
-      ${section('Riscaldamento', WARM.cardio.map((x, i) => checkRow(`cardio-w${i}`, x, done)).join(''))}
+      ${section('Riscaldamento', WARM.cardio.map((x, i) => checkRow(`cardio-w${i}`, x, done)).join('') + warmupHelp('cardio'))}
       <h2>Parte centrale</h2>
       <div class="card">
         <div class="ex">${pic(PIC_RUN)}<strong>${mode === 'intervalli' ? '3 × (3 min sostenuti + 2 min lenti)' : '30 min sostenuti'}</strong></div>
@@ -243,6 +268,7 @@
     return `
       ${section('Riscaldamento', `
         ${WARM.pesi.map((x, i) => checkRow(`pesi-w${i}`, x, done)).join('')}
+        ${warmupHelp('pesi')}
         ${first ? `<p class="muted">${esc(first)}, serie di avvicinamento con peso crescente:</p>` : ''}
         ${first ? ramp.map(([p, reps], i) => checkRow(`pesi-r${i}`, `${approachLoad(first, p)} × ${reps} rip.`, done)).join('') : ''}
         <p class="muted">Riposa 30–60 secondi tra una serie e l'altra.</p>`)}
