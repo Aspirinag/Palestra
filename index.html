@@ -227,7 +227,7 @@
     return `
       ${section('Riscaldamento', [
         ...WARM.pesi.map((x, i) => checkRow(`pesi-w${i}`, x, done)),
-        ...data.exercises.map((name) => checkRow(`pesi-ex-${name}`, `${esc(name)}: 1 serie leggera, circa metà carico`, done, picFor(name))),
+        checkRow('pesi-w-serie', `1 serie leggera per esercizio, circa metà carico`, done),
       ].join(''))}
       <h2>Esercizi</h2>
       ${data.exercises.map((name) => `
