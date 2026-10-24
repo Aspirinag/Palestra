@@ -181,7 +181,7 @@
   let tab = 'oggi';
   let cardioType = CARDIO_TYPES[0];
   let draft = {};        // bozze dei campi pesi (per indice esercizio) e cardio
-  let timer = { left: 0, id: null };
+  let timer = { left: 0, id: null, end: 0 };
 
   function load() {
     try {
@@ -190,7 +190,48 @@
       return structuredClone(DEFAULT);
     }
   }
-  function save() { localStorage.setItem(KEY, JSON.stringify(data)); }
+  function save() {
+    const json = JSON.stringify(data);
+    localStorage.setItem(KEY, json);
+    if (NATIVO) Plugin('Preferences').set({ key: KEY, value: json });
+  }
+
+  // ---------- APP PER IPHONE (Capacitor) ----------
+  // Nell'app i dati vengono copiati anche nelle preferenze di iOS, che il sistema non cancella mai
+  const NATIVO = !!window.Capacitor?.isNativePlatform?.();
+  const Plugin = (nome) => window.Capacitor.Plugins[nome];
+  const NOTIFICA_PAGAMENTO = 1, NOTIFICA_RECUPERO = 2;
+  async function avviaNativo() {
+    if (!NATIVO) return;
+    if (!localStorage.getItem(KEY)) {
+      const { value } = await Plugin('Preferences').get({ key: KEY });
+      if (value) { localStorage.setItem(KEY, value); data = load(); }
+    }
+    save();
+    // Promemoria ogni mese, il giorno 1 alle 9:00
+    const { display } = await Plugin('LocalNotifications').requestPermissions();
+    if (display !== 'granted') return;
+    await Plugin('LocalNotifications').schedule({ notifications: [{
+      id: NOTIFICA_PAGAMENTO, title: 'Palestra', body: 'Oggi si paga la palestra (1 o 2 del mese).',
+      schedule: { on: { day: 1, hour: 9, minute: 0 }, allowWhileIdle: true },
+    }] });
+  }
+  // Nel browser scarica il file, nell'app apre il pannello Condividi (Salva su File, AirDrop, ...)
+  async function condividiFile(nome, testo) {
+    if (!NATIVO) {
+      const url = URL.createObjectURL(new Blob([testo], { type: 'application/json' }));
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = nome;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      return;
+    }
+    const { uri } = await Plugin('Filesystem').writeFile({ path: nome, data: testo, directory: 'CACHE', encoding: 'utf8' });
+    try { await Plugin('Share').share({ title: nome, files: [uri] }); } catch (e) { /* condivisione annullata */ }
+  }
 
   const todayIdx = () => (new Date().getDay() + 6) % 7; // Lunedì = 0
   function todayISO() {
@@ -314,8 +355,16 @@
   function startRest(sec) {
     stopRest(false);
     timer.left = sec;
+    timer.end = Date.now() + sec * 1000;
+    // Nell'app una notifica avvisa a fine recupero anche con il telefono bloccato
+    if (NATIVO) {
+      Plugin('LocalNotifications').schedule({ notifications: [{
+        id: NOTIFICA_RECUPERO, title: 'Recupero finito', body: 'Via con la prossima serie 💪',
+        schedule: { at: new Date(timer.end), allowWhileIdle: true },
+      }] }).catch(() => {});
+    }
     timer.id = setInterval(() => {
-      timer.left--;
+      timer.left = Math.max(0, Math.round((timer.end - Date.now()) / 1000));
       if (timer.left <= 0) {
         stopRest(true);
       } else {
@@ -329,7 +378,9 @@
     clearInterval(timer.id);
     timer.id = null;
     timer.left = 0;
-    if (finished && navigator.vibrate) navigator.vibrate([300, 150, 300]);
+    if (NATIVO && !finished) Plugin('LocalNotifications').cancel({ notifications: [{ id: NOTIFICA_RECUPERO }] }).catch(() => {});
+    if (finished && NATIVO) Plugin('Haptics').vibrate({ duration: 600 }).catch(() => {});
+    else if (finished && navigator.vibrate) navigator.vibrate([300, 150, 300]);
     if (finished) render();
   }
 
@@ -427,7 +478,7 @@
       <p class="muted">Settimana A: 2 giorni di cardio e 1 di pesi. Settimana B: 2 giorni di pesi e 1 di cardio.</p>
       <h2>Backup</h2>
       <div class="card">
-        <p class="muted">I dati restano nel browser di questo dispositivo. Esporta ogni tanto un file di backup, e importalo se cambi telefono o browser.</p>
+        <p class="muted">I dati restano su questo telefono. Esporta ogni tanto un file di backup, e importalo per passare dalla web app all'app (o se cambi telefono).</p>
         <div class="row">
           <button class="small" data-export="1">Esporta backup</button>
           <button class="small" data-import="1">Importa backup</button>
@@ -648,17 +699,7 @@
       return render();
     }
 
-    if (d.export !== undefined) {
-      const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `palestra-backup-${todayISO()}.json`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
-      return;
-    }
+    if (d.export !== undefined) return condividiFile(`palestra-backup-${todayISO()}.json`, JSON.stringify(data, null, 2));
     if (d.import !== undefined) { document.getElementById('importFile').click(); return; }
 
     if (d.calprev !== undefined) { calMonth = new Date(calMonth.getFullYear(), calMonth.getMonth() - 1, 1); return render(); }
@@ -711,7 +752,7 @@
     }
   });
 
-  render();
+  avviaNativo().catch(() => {}).finally(() => render());
 </script>
 </body>
 </html>
