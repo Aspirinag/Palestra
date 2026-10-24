@@ -4,7 +4,26 @@ L'app è la stessa pagina `index.html` (che continua a funzionare anche come web
 impacchettata in un'app iOS vera con [Capacitor](https://capacitorjs.com).
 Nell'app i dati sono salvati anche nelle preferenze di iOS, quindi il sistema non li cancella.
 
-## Prima volta (sul Mac)
+## Installazione con SideStore (consigliata, gratis)
+
+Ad ogni modifica su `main`, GitHub compila l'app e la pubblica nelle *Releases* del repository.
+SideStore la installa firmandola con il tuo Apple ID gratuito e la rinnova da solo ogni 7 giorni via Wi‑Fi.
+
+1. Installa SideStore sull'iPhone seguendo la guida ufficiale: <https://docs.sidestore.io> (serve il Mac solo questa volta).
+2. In SideStore: *Sources → +* e incolla questo indirizzo:
+
+   ```
+   https://github.com/aspirinag/Palestra/releases/latest/download/sidestore.json
+   ```
+
+3. Apri la sorgente **Palestra** e tocca **Installa**.
+4. Gli aggiornamenti compaiono in SideStore (*My Apps → Update*). Apri SideStore ogni tanto per rinnovare le app.
+
+In alternativa scarica `Palestra.ipa` dall'ultima release e aprila con SideStore.
+
+## Installazione con Xcode (alternativa)
+
+### Prima volta (sul Mac)
 
 1. Installa **Xcode** dall'App Store (aprilo una volta e accetta la licenza).
 2. Installa **Node.js** da <https://nodejs.org> (versione LTS).
@@ -25,12 +44,12 @@ Nell'app i dati sono salvati anche nelle preferenze di iOS, quindi il sistema no
 7. Collega l'iPhone con il cavo, sceglilo in alto come destinazione e premi **▶︎**.
 8. La prima volta sull'iPhone: *Impostazioni → Generali → VPN e gestione dispositivi* → autorizza il tuo Apple ID.
 
-## Ogni 7 giorni
+### Ogni 7 giorni
 
 Con l'Apple ID gratuito l'app scade dopo 7 giorni (i dati restano). Per rinnovarla basta collegare l'iPhone e premere di nuovo **▶︎** in Xcode.
 Con l'Apple Developer Program (99 €/anno) dura un anno e si può installare con TestFlight.
 
-## Dopo una modifica a index.html
+### Dopo una modifica a index.html
 
 ```sh
 git pull
@@ -39,7 +58,7 @@ npm run ios
 
 e premi **▶︎** in Xcode.
 
-## Passare i dati dalla web app all'app
+### Passare i dati dalla web app all'app
 
 1. Nella web app: **Esporta backup** e salva il file (es. in *File*).
 2. Nell'app: **Importa backup** e scegli quel file.
