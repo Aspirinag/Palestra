@@ -1,0 +1,43 @@
+# Compila l'app iOS a ogni modifica; su main la pubblica per SideStore
+# (.ipa non firmata: la firma la fa SideStore con il tuo Apple ID)
+name: App iOS
+
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: macos-26
+    env:
+      VERSIONE: 1.0.${{ github.run_number }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run www && npx cap sync ios
+      - name: Compila l'app
+        run: >
+          xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Release
+          -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath build
+          CODE_SIGNING_ALLOWED=NO MARKETING_VERSION=$VERSIONE CURRENT_PROJECT_VERSION=${{ github.run_number }}
+          build
+      - name: Crea la .ipa
+        run: |
+          mkdir Payload
+          cp -R build/Build/Products/Release-iphoneos/App.app Payload/
+          zip -qry Palestra.ipa Payload
+      - name: Pubblica per SideStore
+        if: github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG=v$VERSIONE
+          node scripts/sidestore-source.mjs $VERSIONE Palestra.ipa "https://github.com/${{ github.repository }}/releases/download/$TAG/Palestra.ipa"
+          gh release create $TAG Palestra.ipa sidestore.json --title "Palestra $VERSIONE" --notes "App per SideStore" --latest
