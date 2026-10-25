@@ -79,7 +79,8 @@
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 10px 30px rgba(0, 0, 0, 0.4);
     overflow: hidden;
   }
-  nav button { flex: 1; background: none; color: rgba(255, 255, 255, 0.75); font-weight: 700; font-size: 12px; padding: 16px 0; }
+  nav button { flex: 1; background: none; color: rgba(255, 255, 255, 0.75); font-weight: 700; font-size: 10px; padding: 9px 0 10px; }
+  nav .ic { display: block; font-size: 20px; line-height: 1.2; margin-bottom: 2px; }
   nav button.active { color: #d4ff3f; }
   .calhead { display: flex; justify-content: space-between; align-items: center; margin: 8px 0 12px; }
   .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
@@ -99,11 +100,11 @@
 <body>
 <main id="app"></main>
 <nav>
-  <button data-tab="oggi">OGGI</button>
-  <button data-tab="pesi">PESI</button>
-  <button data-tab="cardio">CARDIO</button>
-  <button data-tab="cal">CAL</button>
-  <button data-tab="piano">PIANO</button>
+  <button data-tab="oggi"><span class="ic">🏠</span>OGGI</button>
+  <button data-tab="pesi"><span class="ic">🏋️</span>PESI</button>
+  <button data-tab="cardio"><span class="ic">🏃</span>CARDIO</button>
+  <button data-tab="cal"><span class="ic">📅</span>CALENDARIO</button>
+  <button data-tab="piano"><span class="ic">⚙️</span>PIANO</button>
 </nav>
 <script>
   const DAYS = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
@@ -220,13 +221,29 @@
       if (value) { localStorage.setItem(KEY, value); data = load(); }
     }
     save();
-    // Promemoria ogni mese, il giorno 1 alle 9:00
     const { display } = await Plugin('LocalNotifications').requestPermissions();
-    if (display !== 'granted') return;
-    await Plugin('LocalNotifications').schedule({ notifications: [{
-      id: NOTIFICA_PAGAMENTO, title: 'Palestra', body: 'Oggi si paga la palestra (1 o 2 del mese).',
-      schedule: { on: { day: 1, hour: 9, minute: 0 }, allowWhileIdle: true },
-    }] });
+    if (display === 'granted') await programmaPagamento();
+  }
+  // Promemoria del pagamento: una sola notifica, il primo giorno utile (1 o 2 del mese alle 9:00)
+  // di un mese non ancora pagato. Si riprogramma all'avvio e quando segni o annulli un pagamento
+  async function programmaPagamento() {
+    if (!NATIVO) return;
+    const LN = Plugin('LocalNotifications');
+    await LN.cancel({ notifications: [{ id: NOTIFICA_PAGAMENTO }] });
+    const ora = new Date();
+    for (let m = 0; m < 3; m++) {
+      const mese = new Date(ora.getFullYear(), ora.getMonth() + m, 1);
+      if (data.payments[ymOf(isoOf(mese.getFullYear(), mese.getMonth(), 1))]) continue;
+      for (const giorno of [1, 2]) {
+        const quando = new Date(mese.getFullYear(), mese.getMonth(), giorno, 9, 0);
+        if (quando <= ora) continue;
+        return LN.schedule({ notifications: [{
+          id: NOTIFICA_PAGAMENTO, title: 'Palestra',
+          body: giorno === 1 ? 'Oggi si paga la palestra (1 o 2 del mese).' : 'Ultimo giorno per pagare la palestra.',
+          schedule: { at: quando, allowWhileIdle: true },
+        }] });
+      }
+    }
   }
   // Nel browser scarica il file, nell'app apre il pannello Condividi (Salva su File, AirDrop, ...)
   async function condividiFile(nome, testo) {
@@ -783,9 +800,10 @@
     if (d.paid !== undefined || d.paidm) {
       data.payments[d.paidm || ymOf(todayISO())] = todayISO();
       save();
+      programmaPagamento().catch(() => {});
       return render();
     }
-    if (d.unpaid) { delete data.payments[d.unpaid]; save(); return render(); }
+    if (d.unpaid) { delete data.payments[d.unpaid]; save(); programmaPagamento().catch(() => {}); return render(); }
   });
 
   // Importa un backup: sostituisce i dati attuali con quelli del file
