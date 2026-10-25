@@ -1,9 +1,0 @@
-{
-  "appId": "io.github.aspirinag.palestra",
-  "appName": "Palestra",
-  "webDir": "www",
-  "ios": {
-    "contentInset": "never",
-    "backgroundColor": "#2c2c36"
-  }
-}
