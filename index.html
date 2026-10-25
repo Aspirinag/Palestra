@@ -35,6 +35,15 @@
   input::placeholder { color: #b0b0bb; }
   .row input { flex: 1; min-width: 0; }
   .row.fit { flex-wrap: nowrap; }
+  .timerbar { position: sticky; top: calc(8px + env(safe-area-inset-top)); z-index: 5; display: flex; align-items: center; gap: 8px; padding: 10px 12px; margin-bottom: 12px; background: rgba(44, 44, 54, 0.85); }
+  .timerbar .t { font-size: 26px; font-weight: 300; font-variant-numeric: tabular-nums; flex: 1; }
+  .timerbar.on .t { color: #d4ff3f; }
+  .timerbar .small { padding: 8px 10px; }
+  .oggi-serie { color: #d4ff3f; font-size: 14px; font-weight: 600; margin: 4px 0; }
+  .giorno-serie { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+  .giorno-serie:last-child { border-bottom: none; }
+  .mini { padding: 4px 8px; font-size: 13px; border-radius: 8px; }
+  svg.prog { width: 100%; height: auto; display: block; margin-top: 6px; }
   .row.fit button { flex: none; }
   button { font: inherit; border: none; cursor: pointer; }
   .primary { display: block; width: 100%; background: linear-gradient(rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0) 55%), #d4ff3f; color: #0a0a0a; -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.3); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 8px 24px rgba(212, 255, 63, 0.2); font-weight: 700; font-size: 16px; border-radius: 16px; padding: 14px; margin: 12px 0; }
@@ -348,6 +357,14 @@
       ${skip}
       ${timerBlock()}`;
   }
+  // In PESI: barra compatta che resta in alto mentre scorri gli esercizi
+  const timerBar = () => `
+      <div class="card timerbar ${timer.id ? 'on' : ''}">
+        <span class="t" id="timer">${fmt(timer.left)}</span>
+        ${timer.id
+          ? '<button class="small" data-stop="1">Stop</button>'
+          : [60, 90, 120].map((s) => `<button class="small" data-rest="${s}">${s}s</button>`).join('')}
+      </div>`;
   const timerBlock = () => `
       <h2>Timer di recupero</h2>
       <div class="timer" id="timer">${fmt(timer.left)}</div>
@@ -389,10 +406,15 @@
 
   // ---------- PESI ----------
   function pesi() {
+    const oggiIso = todayISO();
     const cards = data.exercises.map((name, i) => {
-      const last = [...data.sets].reverse().find((s) => s.exercise === name);
+      const last = [...data.sets].reverse().find((s) => s.exercise === name && s.date !== oggiIso)
+        || [...data.sets].reverse().find((s) => s.exercise === name);
       const d = draft[i] || { kg: '', reps: '' };
       const target = targetOf(name);
+      const oggiSerie = data.sets.filter((s) => s.exercise === name && s.date === oggiIso);
+      const nSerie = parseInt(target, 10);
+      const ultimaOggi = oggiSerie[oggiSerie.length - 1];
       return `
         <div class="card">
           <div class="between">
@@ -401,32 +423,63 @@
           </div>
           ${target ? `<p class="muted">Obiettivo: ${target}</p>` : ''}
           ${last ? `<p class="muted">Ultima volta: ${last.kg} kg × ${last.reps} (${fmtDate(last.date)})</p>` : ''}
+          ${oggiSerie.length ? `<p class="oggi-serie">Oggi ${nSerie ? `${oggiSerie.length}/${nSerie}` : oggiSerie.length} serie${oggiSerie.length >= nSerie ? ' ✓' : ''}: ${oggiSerie.map((s) => `${s.kg}×${s.reps}`).join(' · ')}</p>` : ''}
           <div class="row fit">
-            <input inputmode="decimal" placeholder="kg" value="${esc(d.kg)}" data-draft="${i}" data-field="kg">
-            <input inputmode="numeric" placeholder="rip." value="${esc(d.reps)}" data-draft="${i}" data-field="reps">
+            <input inputmode="decimal" placeholder="${ultimaOggi || last ? `kg (${(ultimaOggi || last).kg})` : 'kg'}" value="${esc(d.kg)}" data-draft="${i}" data-field="kg">
+            <input inputmode="numeric" placeholder="${ultimaOggi || last ? `rip. (${(ultimaOggi || last).reps})` : 'rip.'}" value="${esc(d.reps)}" data-draft="${i}" data-field="reps">
             <button class="small" data-save="${i}">Salva</button>
           </div>
+          ${progressi(name)}
         </div>`;
     }).join('');
     return `
       <h1>Scheda pesi</h1>
-      ${timerBlock()}
+      ${timerBar()}
       ${cards}
       <div class="row fit">
         <input id="newEx" class="grow" placeholder="Nuovo esercizio">
         <button class="small" data-add="1">Aggiungi</button>
       </div>
       <h2>Storico serie</h2>
-      ${data.sets.length ? [...data.sets].map((s, idx) => ({ ...s, idx })).reverse().slice(0, 50).map((s) => `
-        <div class="card">
-          <div class="between">
-            <div><strong>${esc(s.exercise)}</strong><p class="muted">${s.kg} kg × ${s.reps} rip. · ${fmtDate(s.date)}</p></div>
-            <div class="row fit">
-              <button class="small" data-editset="${s.idx}">Modifica</button>
-              <button class="link" data-delset="${s.idx}">Elimina</button>
-            </div>
-          </div>
-        </div>`).join('') : '<p class="muted">Nessuna serie registrata.</p>'}`;
+      ${storicoSerie()}`;
+  }
+
+  // Carico massimo di ogni giornata per un esercizio, come piccolo grafico (servono almeno 2 giornate)
+  function progressi(name) {
+    const perGiorno = {};
+    data.sets.filter((s) => s.exercise === name).forEach((s) => { perGiorno[s.date] = Math.max(perGiorno[s.date] || 0, s.kg); });
+    const giorni = Object.keys(perGiorno).sort().slice(-12);
+    if (giorni.length < 2) return '';
+    const v = giorni.map((g) => perGiorno[g]);
+    const w = 300, h = 54, padL = 34, padR = 52;
+    const min = Math.min(...v), range = Math.max(...v) - min || 1;
+    const pts = v.map((x, i) => [padL + (i * (w - padL - padR)) / (v.length - 1), 10 + (h - 20) - ((x - min) / range) * (h - 20)]);
+    const [x0, y0] = pts[0], [x1, y1] = pts[pts.length - 1];
+    return `<svg class="prog" viewBox="0 0 ${w} ${h}" aria-label="Carico massimo per giornata">
+      <polyline points="${pts.map((p) => p.map((c) => c.toFixed(1)).join(',')).join(' ')}" fill="none" stroke="#d4ff3f" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      ${pts.map(([x, y]) => `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="2.5" fill="#d4ff3f"/>`).join('')}
+      <text x="${x0 - 6}" y="${y0 + 4}" text-anchor="end" font-size="11" fill="#d4d4dc">${v[0]}</text>
+      <text x="${x1 + 6}" y="${y1 + 4}" font-size="11" font-weight="700" fill="#d4ff3f">${v[v.length - 1]} kg</text>
+    </svg>`;
+  }
+
+  // Storico: una scheda per giornata (ultime 15), con le serie di ogni esercizio
+  function storicoSerie() {
+    if (!data.sets.length) return '<p class="muted">Nessuna serie registrata.</p>';
+    const perData = {};
+    data.sets.forEach((s, idx) => { (perData[s.date] = perData[s.date] || []).push({ ...s, idx }); });
+    return Object.keys(perData).sort().reverse().slice(0, 15).map((date) => `
+      <div class="card">
+        <strong>${fmtDate(date)}</strong>
+        ${perData[date].map((s) => `
+          <div class="giorno-serie">
+            <span>${esc(s.exercise)} <span class="muted">${s.kg} kg × ${s.reps}</span></span>
+            <span style="white-space: nowrap">
+              <button class="small mini" data-editset="${s.idx}" aria-label="Modifica">✎</button>
+              <button class="small mini" data-delset="${s.idx}" aria-label="Elimina">✕</button>
+            </span>
+          </div>`).join('')}
+      </div>`).join('');
   }
 
   // ---------- CARDIO ----------
@@ -624,8 +677,10 @@
     if (d.save !== undefined) {
       const i = Number(d.save);
       const dr = draft[i] || {};
-      const kg = parseFloat(String(dr.kg || '').replace(',', '.'));
-      const reps = parseInt(dr.reps, 10);
+      // Campi vuoti: vale il valore suggerito tra parentesi (ultima serie fatta)
+      const prec = [...data.sets].reverse().find((s) => s.exercise === data.exercises[i]);
+      const kg = parseFloat(String(dr.kg || (prec ? prec.kg : '')).replace(',', '.'));
+      const reps = parseInt(dr.reps || (prec ? prec.reps : ''), 10);
       if (isNaN(kg) || isNaN(reps)) return alert('Inserisci kg e ripetizioni');
       data.sets.push({ date: todayISO(), exercise: data.exercises[i], kg, reps });
       segnaFatto('pesi');
