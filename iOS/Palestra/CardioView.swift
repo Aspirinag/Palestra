@@ -75,7 +75,7 @@ struct CardioView: View {
                 let c = archivio.stato.cardio[i]
                 Button { daModificare = i } label: {
                     HStack(spacing: 12) {
-                        Image(systemName: simbolo(c.type)).foregroundStyle(.tint).frame(width: 28)
+                        Image(systemName: simbolo(c.type)).foregroundStyle(Color.accentColor).frame(width: 28)
                         VStack(alignment: .leading, spacing: 2) {
                             Text("\(c.type) · \(c.minutes) min" + (c.km > 0 ? " · \(num(c.km)) km" : ""))
                                 .foregroundStyle(.primary)
@@ -83,6 +83,7 @@ struct CardioView: View {
                         }
                     }
                 }
+                .tint(.primary)
                 .swipeActions {
                     Button("Elimina", systemImage: "trash", role: .destructive) { archivio.stato.cardio.remove(at: i) }
                 }

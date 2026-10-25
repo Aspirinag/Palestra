@@ -41,7 +41,12 @@ struct CalendarioView: View {
         let esito = archivio.stato.log[scelto].flatMap(Esito.init(rawValue:))
         let programmato = archivio.programmato(scelto)
         return Section {
-            LabeledContent("Programmato") { Label(programmato.nome, systemImage: programmato.simbolo) }
+            LabeledContent("Programmato") {
+                HStack(spacing: 6) {
+                    Image(systemName: programmato.simbolo).foregroundStyle(.tint)
+                    Text(programmato.nome)
+                }
+            }
             HStack(spacing: 8) {
                 ForEach(Esito.allCases) { e in
                     Button(e.nome) {
@@ -88,32 +93,49 @@ struct GrigliaMese: View {
         let vuoti = Giorni.indice(primo)
         let giorni = cal.range(of: .day, in: .month, for: mese)?.count ?? 30
         let oggi = Giorni.oggi()
-        LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 6), count: 7), spacing: 6) {
-            ForEach(["L", "M", "M", "G", "V", "S", "D"].indices, id: \.self) { i in
-                Text(["L", "M", "M", "G", "V", "S", "D"][i])
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.secondary)
+        // Griglia non lazy: dentro una lista la griglia lazy viene misurata male e si taglia
+        let celle: [Int?] = Array(repeating: nil, count: vuoti) + (0..<giorni).map { Optional($0) }
+        let settimane = stride(from: 0, to: celle.count, by: 7).map { Array(celle[$0..<min($0 + 7, celle.count)]) }
+        Grid(horizontalSpacing: 6, verticalSpacing: 6) {
+            GridRow {
+                ForEach(["L", "M", "M", "G", "V", "S", "D"].indices, id: \.self) { i in
+                    Text(["L", "M", "M", "G", "V", "S", "D"][i])
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity)
+                }
             }
-            ForEach(0..<vuoti, id: \.self) { _ in Color.clear.frame(height: 44) }
-            ForEach(0..<giorni, id: \.self) { d in
-                let iso = Giorni.aggiungi(primo, d)
-                Button { scelto = iso } label: {
-                    VStack(spacing: 3) {
-                        Text("\(d + 1)")
-                            .font(.callout.weight(iso == oggi ? .bold : .regular))
-                            .foregroundStyle(iso == oggi ? AnyShapeStyle(.tint) : AnyShapeStyle(.primary))
-                        segno(iso)
-                    }
-                    .frame(maxWidth: .infinity, minHeight: 44)
-                    .background {
-                        if iso == scelto {
-                            RoundedRectangle(cornerRadius: 12).fill(.tint.opacity(0.18))
+            ForEach(settimane.indices, id: \.self) { w in
+                GridRow {
+                    ForEach(0..<7, id: \.self) { i in
+                        if i < settimane[w].count, let d = settimane[w][i] {
+                            cella(primo: primo, giorno: d, oggi: oggi)
+                        } else {
+                            Color.clear.frame(maxWidth: .infinity, minHeight: 44)
                         }
                     }
                 }
-                .buttonStyle(.plain)
             }
         }
+    }
+
+    private func cella(primo: String, giorno d: Int, oggi: String) -> some View {
+        let iso = Giorni.aggiungi(primo, d)
+        return Button { scelto = iso } label: {
+            VStack(spacing: 3) {
+                Text("\(d + 1)")
+                    .font(.callout.weight(iso == oggi ? .bold : .regular))
+                    .foregroundStyle(iso == oggi ? AnyShapeStyle(.tint) : AnyShapeStyle(.primary))
+                segno(iso)
+            }
+            .frame(maxWidth: .infinity, minHeight: 44)
+            .background {
+                if iso == scelto {
+                    RoundedRectangle(cornerRadius: 12).fill(.tint.opacity(0.18))
+                }
+            }
+        }
+        .buttonStyle(.plain)
     }
 
     @ViewBuilder private func segno(_ iso: String) -> some View {

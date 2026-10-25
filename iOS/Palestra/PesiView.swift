@@ -182,6 +182,7 @@ struct StoricoSerie: View {
                         LabeledContent(s.exercise, value: "\(num(s.kg)) kg × \(s.reps)")
                             .foregroundStyle(.primary)
                     }
+                    .tint(.primary)
                     .swipeActions {
                         Button("Elimina", systemImage: "trash", role: .destructive) {
                             archivio.stato.sets.remove(at: i)

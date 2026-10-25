@@ -15,7 +15,10 @@ struct OggiView: View {
                 Section {
                     LabeledContent("Settimana", value: archivio.settimana(oggi))
                     LabeledContent("Programmato") {
-                        Label(programmato.nome, systemImage: programmato.simbolo)
+                        HStack(spacing: 6) {
+                            Image(systemName: programmato.simbolo).foregroundStyle(.tint)
+                            Text(programmato.nome)
+                        }
                     }
                 } footer: {
                     if programmato == .riposo { Text("Oggi è riposo: ti mostro il prossimo allenamento.") }
